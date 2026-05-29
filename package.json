@@ -2,6 +2,7 @@
   "name": "ami",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,9 +10,17 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "mongodb": "^7.2.0",
+    "mongoose": "^9.6.2",
     "next": "16.2.6",
+    "next-auth": "^4.24.14",
+    "pusher": "^5.3.3",
+    "pusher-js": "^7.6.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
