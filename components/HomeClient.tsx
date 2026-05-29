@@ -30,7 +30,7 @@ export default function HomeClient() {
     if (!session?.user?.name) return;
 
     // ⭐ Connexion HTTPS + options iPhone
-    const s = io("https://annie-springer-belief-tucson.trycloudflare.com");
+    const s = io("https://ami-msec.onrender.com");
 
     setSocket(s);
 
