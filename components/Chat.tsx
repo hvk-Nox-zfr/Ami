@@ -106,6 +106,7 @@ export default function Chat({
         </button>
       </div>
 
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-2">
         {messages.map((msg, i) => {
           const isMe = msg.sender === session?.user?.email;
@@ -126,6 +127,7 @@ export default function Chat({
         <div ref={bottomRef} />
       </div>
 
+      {/* Input */}
       <div className="flex gap-2 mt-4">
         <input
           className="flex-1 border p-2 rounded-lg"
