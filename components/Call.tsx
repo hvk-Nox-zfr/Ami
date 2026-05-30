@@ -2,26 +2,25 @@
 
 import { useEffect, useRef } from "react";
 
-export default function Call({
-  roomId,
-  onClose,
-}: {
+type CallProps = {
   roomId: string;
   onClose: () => void;
-}) {
-  const localVideo = useRef<HTMLVideoElement>(null);
-  const remoteVideo = useRef<HTMLVideoElement>(null);
+};
+
+export default function Call({ roomId, onClose }: CallProps) {
+  const localVideo = useRef<HTMLVideoElement | null>(null);
+  const remoteVideo = useRef<HTMLVideoElement | null>(null);
   const pc = useRef<RTCPeerConnection | null>(null);
-  const makingOffer = useRef(false);
+
+  const isCaller = useRef(false);
 
   useEffect(() => {
     const start = async () => {
-      // ⭐ Serveur STUN obligatoire pour Cloudflare / 4G / WiFi différents
       pc.current = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
       });
 
-      pc.current.ontrack = (event) => {
+      pc.current.ontrack = (event: RTCTrackEvent) => {
         if (remoteVideo.current) {
           remoteVideo.current.srcObject = event.streams[0];
         }
@@ -40,7 +39,6 @@ export default function Call({
         pc.current?.addTrack(track, stream);
       });
 
-      // ⭐ Envoi ICE
       pc.current.onicecandidate = async (event) => {
         if (event.candidate) {
           await fetch("/api/call/signal", {
@@ -53,68 +51,62 @@ export default function Call({
         }
       };
 
-      // ⭐ Création de l’offre
-      makingOffer.current = true;
-      const offer = await pc.current.createOffer();
-      await pc.current.setLocalDescription(offer);
-      makingOffer.current = false;
-
-      await fetch("/api/call/signal", {
-        method: "POST",
-        body: JSON.stringify({
-          roomId,
-          data: { offer },
-        }),
-      });
-    };
-
-    start();
-
-    // ⭐ Polling plus rapide (200ms)
-    const interval = setInterval(async () => {
       const res = await fetch(`/api/call/signal?roomId=${roomId}`);
       const { data } = await res.json();
 
-      for (const d of data) {
-        // ⭐ Collision d’offre gérée
-        if (d.offer) {
-          const offerCollision =
-            makingOffer.current ||
-            pc.current?.signalingState !== "stable";
+      if (data.length === 0) {
+        isCaller.current = true;
 
-          if (offerCollision) {
-            await pc.current?.setLocalDescription({ type: "rollback" });
-          }
+        const offer = await pc.current.createOffer();
+        await pc.current.setLocalDescription(offer);
 
-          await pc.current?.setRemoteDescription(d.offer);
-
-          const answer = await pc.current?.createAnswer();
-          await pc.current?.setLocalDescription(answer);
-
-          await fetch("/api/call/signal", {
-            method: "POST",
-            body: JSON.stringify({
-              roomId,
-              data: { answer },
-            }),
-          });
-        }
-
-        if (d.answer) {
-          await pc.current?.setRemoteDescription(d.answer);
-        }
-
-        if (d.candidate) {
-          try {
-            await pc.current?.addIceCandidate(d.candidate);
-          } catch (e) {
-            console.log("Erreur ICE", e);
-          }
-        }
+        await fetch("/api/call/signal", {
+          method: "POST",
+          body: JSON.stringify({
+            roomId,
+            data: { offer },
+          }),
+        });
       }
-    }, 200);
 
-    return () => clearInterval(interval);
+      const interval = setInterval(async () => {
+        const res = await fetch(`/api/call/signal?roomId=${roomId}`);
+        const { data } = await res.json();
+
+        for (const d of data) {
+          if (d.offer && !isCaller.current) {
+            await pc.current?.setRemoteDescription(d.offer);
+
+            const answer = await pc.current?.createAnswer();
+            await pc.current?.setLocalDescription(answer);
+
+            await fetch("/api/call/signal", {
+              method: "POST",
+              body: JSON.stringify({
+                roomId,
+                data: { answer },
+              }),
+            });
+          }
+
+          if (d.answer && isCaller.current) {
+            await pc.current?.setRemoteDescription(d.answer);
+          }
+
+          if (d.candidate) {
+            try {
+              await pc.current?.addIceCandidate(d.candidate);
+            } catch (e) {
+              console.log("Erreur ICE", e);
+            }
+          }
+        }
+      }, 200);
+
+      return () => clearInterval(interval);
+    };
+
+    start();
   }, [roomId]);
 
   return (
