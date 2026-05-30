@@ -25,24 +25,24 @@ export default function HomeClient() {
 
   const [socket, setSocket] = useState<any>(null);
 
-  // Charger amis + socket
   useEffect(() => {
     if (!session?.user?.name) return;
 
     const s = io("https://ami-msec.onrender.com");
     setSocket(s);
 
-    // ⭐ IMPORTANT : rejoindre la room de l'utilisateur
+    // ⭐ Rejoindre la room utilisateur
     s.emit("setup", session.user.name);
 
+    // Charger les amis
     const loadFriends = async () => {
       const res = await fetch("/api/friends/list");
       const data = await res.json();
       setAmis(data.friends || []);
     };
-
     loadFriends();
 
+    // Statut en ligne
     s.emit("user-online", session.user.name);
 
     s.on("update-status", ({ username, online }) => {
@@ -58,14 +58,16 @@ export default function HomeClient() {
       setIncomingCall(from);
     });
 
-    // ⭐ L’autre accepte
+    // ⭐ L’autre accepte → on ouvre l’écran d’appel
     s.on("call-accepted", ({ from }) => {
+      setIncomingCall(null);
       setCallUser(from);
     });
 
     // ⭐ L’autre refuse
     s.on("call-declined", ({ from }) => {
       alert(`${from} a refusé l’appel`);
+      setCallUser(null);
     });
 
     return () => {
@@ -94,10 +96,11 @@ export default function HomeClient() {
       to: friend,
     });
 
-    alert("📞 Appel envoyé, en attente de réponse…");
+    // On affiche l'écran d'appel côté appelant
+    setCallUser(friend);
   };
 
-  // ⭐ Accepter
+  // ⭐ Accepter l’appel
   const acceptCall = () => {
     if (!socket || !incomingCall || !session?.user?.name) return;
 
@@ -110,7 +113,7 @@ export default function HomeClient() {
     setIncomingCall(null);
   };
 
-  // ⭐ Refuser
+  // ⭐ Refuser l’appel
   const rejectCall = () => {
     if (!socket || !incomingCall || !session?.user?.name) return;
 
