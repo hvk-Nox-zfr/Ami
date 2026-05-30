@@ -29,10 +29,11 @@ export default function HomeClient() {
   useEffect(() => {
     if (!session?.user?.name) return;
 
-    // ⭐ Connexion HTTPS + options iPhone
     const s = io("https://ami-msec.onrender.com");
-
     setSocket(s);
+
+    // ⭐ IMPORTANT : rejoindre la room de l'utilisateur
+    s.emit("setup", session.user.name);
 
     const loadFriends = async () => {
       const res = await fetch("/api/friends/list");
@@ -52,25 +53,19 @@ export default function HomeClient() {
       );
     });
 
-    // 🔥 Réception d’un appel entrant
-    s.on("incoming-call", ({ from, to }) => {
-      if (to === session.user.name) {
-        setIncomingCall(from);
-      }
+    // ⭐ Réception d’un appel entrant
+    s.on("incoming-call", ({ from }) => {
+      setIncomingCall(from);
     });
 
-    // 🔥 L’autre accepte
-    s.on("call-accepted", ({ from, to }) => {
-      if (to === session.user.name) {
-        setCallUser(from);
-      }
+    // ⭐ L’autre accepte
+    s.on("call-accepted", ({ from }) => {
+      setCallUser(from);
     });
 
-    // 🔥 L’autre refuse
-    s.on("call-rejected", ({ from, to }) => {
-      if (to === session.user.name) {
-        alert(`${from} a refusé l’appel`);
-      }
+    // ⭐ L’autre refuse
+    s.on("call-declined", ({ from }) => {
+      alert(`${from} a refusé l’appel`);
     });
 
     return () => {
@@ -90,11 +85,11 @@ export default function HomeClient() {
     loadGroups();
   }, []);
 
-  // 🔥 Lancer un appel
+  // ⭐ Lancer un appel
   const startCall = (friend: string) => {
     if (!socket || !session?.user?.name) return;
 
-    socket.emit("call-request", {
+    socket.emit("call-user", {
       from: session.user.name,
       to: friend,
     });
@@ -102,7 +97,7 @@ export default function HomeClient() {
     alert("📞 Appel envoyé, en attente de réponse…");
   };
 
-  // 🔥 Accepter
+  // ⭐ Accepter
   const acceptCall = () => {
     if (!socket || !incomingCall || !session?.user?.name) return;
 
@@ -115,11 +110,11 @@ export default function HomeClient() {
     setIncomingCall(null);
   };
 
-  // 🔥 Refuser
+  // ⭐ Refuser
   const rejectCall = () => {
     if (!socket || !incomingCall || !session?.user?.name) return;
 
-    socket.emit("call-rejected", {
+    socket.emit("call-declined", {
       from: session.user.name,
       to: incomingCall,
     });
@@ -130,12 +125,12 @@ export default function HomeClient() {
   return (
     <main className="h-screen w-full bg-black text-white flex">
 
-      {/* 🔥 Fenêtre d'appel */}
+      {/* Fenêtre d'appel */}
       {callUser && (
         <Call roomId={callUser} onClose={() => setCallUser(null)} />
       )}
 
-      {/* 🔥 Popup d’appel entrant */}
+      {/* Popup d’appel entrant */}
       {incomingCall && (
         <div className="fixed bottom-5 right-5 bg-gray-900 p-4 rounded-xl shadow-xl">
           <p className="font-semibold">{incomingCall} t’appelle 📞</p>
@@ -196,7 +191,7 @@ export default function HomeClient() {
                 </div>
               </div>
 
-              {/* 🔥 Bouton d'appel */}
+              {/* Bouton d'appel */}
               <button
                 onClick={() => startCall(friend.username)}
                 className="bg-green-600 px-3 py-1 rounded-lg hover:bg-green-700"
