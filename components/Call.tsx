@@ -4,15 +4,16 @@ import { useEffect, useRef } from "react";
 
 type CallProps = {
   roomId: string;
+  role: "caller" | "callee";
   onClose: () => void;
 };
 
-export default function Call({ roomId, onClose }: CallProps) {
+export default function Call({ roomId, role, onClose }: CallProps) {
   const localVideo = useRef<HTMLVideoElement | null>(null);
   const remoteVideo = useRef<HTMLVideoElement | null>(null);
   const pc = useRef<RTCPeerConnection | null>(null);
 
-  const isCaller = useRef(false);
+  const isCaller = useRef(role === "caller");
 
   useEffect(() => {
     const start = async () => {
@@ -51,12 +52,8 @@ export default function Call({ roomId, onClose }: CallProps) {
         }
       };
 
-      const res = await fetch(`/api/call/signal?roomId=${roomId}`);
-      const { data } = await res.json();
-
-      if (data.length === 0) {
-        isCaller.current = true;
-
+      // ⭐ Si on est caller → on crée l’offre
+      if (isCaller.current) {
         const offer = await pc.current.createOffer();
         await pc.current.setLocalDescription(offer);
 
@@ -69,6 +66,7 @@ export default function Call({ roomId, onClose }: CallProps) {
         });
       }
 
+      // ⭐ Polling
       const interval = setInterval(async () => {
         const res = await fetch(`/api/call/signal?roomId=${roomId}`);
         const { data } = await res.json();

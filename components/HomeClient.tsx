@@ -16,7 +16,12 @@ export default function HomeClient() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
-  const [callUser, setCallUser] = useState<string | null>(null);
+  // ⭐ Nouveau : callUser contient id + role
+  const [callUser, setCallUser] = useState<{
+    id: string;
+    role: "caller" | "callee";
+  } | null>(null);
+
   const [incomingCall, setIncomingCall] = useState<string | null>(null);
 
   const [amis, setAmis] = useState<any[]>([]);
@@ -61,7 +66,7 @@ export default function HomeClient() {
     // ⭐ L’autre accepte → on ouvre l’écran d’appel
     s.on("call-accepted", ({ from }) => {
       setIncomingCall(null);
-      setCallUser(from);
+      setCallUser({ id: from, role: "callee" });
     });
 
     // ⭐ L’autre refuse
@@ -96,8 +101,8 @@ export default function HomeClient() {
       to: friend,
     });
 
-    // On affiche l'écran d'appel côté appelant
-    setCallUser(friend);
+    // ⭐ Caller
+    setCallUser({ id: friend, role: "caller" });
   };
 
   // ⭐ Accepter l’appel
@@ -109,7 +114,7 @@ export default function HomeClient() {
       to: incomingCall,
     });
 
-    setCallUser(incomingCall);
+    setCallUser({ id: incomingCall, role: "callee" });
     setIncomingCall(null);
   };
 
@@ -126,16 +131,20 @@ export default function HomeClient() {
   };
 
   return (
-    <main className="h-screen w-full bg-black text-white flex">
+    <main className="h-screen w-full bg-black text-white flex flex-col md:flex-row">
 
-      {/* Fenêtre d'appel */}
+      {/* ⭐ Fenêtre d'appel */}
       {callUser && (
-        <Call roomId={callUser} onClose={() => setCallUser(null)} />
+        <Call
+          roomId={callUser.id}
+          role={callUser.role}
+          onClose={() => setCallUser(null)}
+        />
       )}
 
-      {/* Popup d’appel entrant */}
+      {/* ⭐ Popup d’appel entrant */}
       {incomingCall && (
-        <div className="fixed bottom-5 right-5 bg-gray-900 p-4 rounded-xl shadow-xl">
+        <div className="fixed bottom-5 right-5 bg-gray-900 p-4 rounded-xl shadow-xl z-50">
           <p className="font-semibold">{incomingCall} t’appelle 📞</p>
 
           <div className="flex gap-3 mt-3">
@@ -156,8 +165,8 @@ export default function HomeClient() {
         </div>
       )}
 
-      {/* Colonne gauche */}
-      <aside className="w-1/4 border-r border-gray-800 p-5 overflow-y-auto">
+      {/* ⭐ Colonne gauche (amis) */}
+      <aside className="w-full md:w-1/4 border-r border-gray-800 p-5 overflow-y-auto">
         <h2 className="text-xl font-bold mb-4 text-yellow-300">Chats</h2>
 
         <div className="space-y-3">
@@ -245,20 +254,26 @@ export default function HomeClient() {
         </div>
       </aside>
 
-      {/* Centre */}
-      <section className="flex-1 p-8 overflow-y-auto">
+      {/* ⭐ Centre */}
+      <section className="flex-1 p-4 md:p-8 overflow-y-auto">
         {!selectedUser && !selectedGroup && (
           <p className="text-gray-400 text-center mt-20">
             Sélectionne un ami ou un groupe pour discuter
           </p>
         )}
 
-        {selectedUser && <Chat otherUser={selectedUser} />}
+        {selectedUser && (
+          <Chat
+            otherUser={selectedUser}
+            onCall={(friend) => startCall(friend)}
+          />
+        )}
+
         {selectedGroup && <GroupChat groupId={selectedGroup} />}
       </section>
 
-      {/* Profil */}
-      <aside className="w-1/4 border-l border-gray-800 p-5">
+      {/* ⭐ Profil */}
+      <aside className="hidden md:block w-1/4 border-l border-gray-800 p-5">
         <h2 className="text-xl font-bold mb-4 text-yellow-300">Profil</h2>
 
         <div className="bg-gray-900 p-5 rounded-2xl flex flex-col items-center">

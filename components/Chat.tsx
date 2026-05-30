@@ -3,14 +3,18 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { clientPusher } from "@/lib/pusher";
-import Call from "@/components/Call"; // 🔥 On importe le composant d'appel
 
-export default function Chat({ otherUser }: { otherUser: string }) {
+export default function Chat({
+  otherUser,
+  onCall,
+}: {
+  otherUser: string;
+  onCall: (friend: string) => void;
+}) {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [otherUserEmail, setOtherUserEmail] = useState<string | null>(null);
-  const [callActive, setCallActive] = useState(false); // 🔥 état pour l'appel
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Convertir pseudo → email
@@ -25,7 +29,7 @@ export default function Chat({ otherUser }: { otherUser: string }) {
     setOtherUserEmail(data.email);
   };
 
-  // Charger les messages
+  // Charger messages
   const loadMessages = async (email: string) => {
     const res = await fetch("/api/messages/get", {
       method: "POST",
@@ -37,7 +41,6 @@ export default function Chat({ otherUser }: { otherUser: string }) {
     setMessages(data.messages);
   };
 
-  // Charger email + messages
   useEffect(() => {
     fetchEmail();
   }, [otherUser]);
@@ -46,7 +49,6 @@ export default function Chat({ otherUser }: { otherUser: string }) {
     if (otherUserEmail) loadMessages(otherUserEmail);
   }, [otherUserEmail]);
 
-  // Scroll auto
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -75,7 +77,7 @@ export default function Chat({ otherUser }: { otherUser: string }) {
     };
   }, [otherUserEmail, session?.user?.email]);
 
-  // Envoyer un message
+  // Envoyer message
   const sendMessage = async () => {
     if (!content.trim()) return;
 
@@ -97,17 +99,12 @@ export default function Chat({ otherUser }: { otherUser: string }) {
       {/* 🔥 Bouton d'appel */}
       <div className="flex justify-end mb-3">
         <button
-          onClick={() => setCallActive(true)}
+          onClick={() => onCall(otherUser)}
           className="bg-green-600 px-3 py-1 rounded-lg hover:bg-green-700"
         >
           📞 Appeler {otherUser}
         </button>
       </div>
-
-      {/* Fenêtre d'appel */}
-      {callActive && (
-        <Call roomId={otherUser} onClose={() => setCallActive(false)} />
-      )}
 
       <div className="flex-1 overflow-y-auto space-y-2">
         {messages.map((msg, i) => {
