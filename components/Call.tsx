@@ -85,7 +85,6 @@ export default function Call({ roomId, role, onClose }: CallProps) {
       videoSender.replaceTrack(newStream.getVideoTracks()[0]);
     }
 
-    // Mettre à jour le stream local
     localStream.current = newStream;
   };
 
@@ -251,33 +250,56 @@ export default function Call({ roomId, role, onClose }: CallProps) {
         </div>
       )}
 
-      {/* ⭐ Boutons */}
-      <div className="absolute bottom-10 flex gap-6 bg-gray-900 bg-opacity-60 px-6 py-3 rounded-full shadow-xl">
+      {/* ⭐ Boutons futuristes */}
+      <div className="absolute bottom-10 flex gap-6 bg-black/40 px-6 py-4 rounded-full backdrop-blur-md shadow-xl">
 
+        {/* Micro */}
         <button
           onClick={toggleMic}
-          className={`px-4 py-2 rounded-full ${
-            micOn ? "bg-green-600" : "bg-red-600"
-          }`}
+          className={`neon-btn ${micOn ? "green" : "red"}`}
         >
-          {micOn ? "🎤" : "🔇"}
+          {micOn ? (
+            <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M12 1v14a4 4 0 0 0 4-4V5a4 4 0 0 0-8 0v6a4 4 0 0 0 4 4" />
+              <path d="M19 10a7 7 0 0 1-14 0" />
+              <path d="M12 21v-4" />
+            </svg>
+          ) : (
+            <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M1 1l22 22" />
+              <path d="M12 1v5m0 4v5a4 4 0 0 0 4-4V9" />
+              <path d="M19 10a7 7 0 0 1-14 0" />
+            </svg>
+          )}
         </button>
 
+        {/* Caméra */}
         <button
           onClick={toggleCam}
-          className={`px-4 py-2 rounded-full ${
-            camOn ? "bg-green-600" : "bg-red-600"
-          }`}
+          className={`neon-btn ${camOn ? "green" : "red"}`}
         >
-          {camOn ? "📷" : "🚫"}
+          {camOn ? (
+            <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2">
+              <rect x="3" y="5" width="13" height="14" rx="2" />
+              <path d="M16 8l5-3v14l-5-3z" />
+            </svg>
+          ) : (
+            <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M1 1l22 22" />
+              <rect x="3" y="5" width="13" height="14" rx="2" />
+              <path d="M16 8l5-3v14l-5-3z" />
+            </svg>
+          )}
         </button>
 
+        {/* Switch caméra (mobile only) */}
         {isMobile && (
-          <button
-            onClick={switchCamera}
-            className="px-4 py-2 rounded-full bg-blue-600"
-          >
-            🔄
+          <button onClick={switchCamera} className="neon-btn">
+            <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M4 4h4l2-2h4l2 2h4v4l2 2v4l-2 2v4h-4l-2 2h-4l-2-2H4v-4l-2-2v-4l2-2z" />
+              <path d="M9 9l6 6" />
+              <path d="M15 9l-6 6" />
+            </svg>
           </button>
         )}
       </div>
