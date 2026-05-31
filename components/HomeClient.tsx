@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { io } from "socket.io-client";
 
@@ -10,13 +10,16 @@ import CreateGroup from "@/components/CreateGroup";
 import Call from "@/components/Call";
 import AddFriend from "@/components/AddFriend";
 
-function getRoomId(a: string, b: string) {
-  return [a, b].sort().join("-");
-}
-
 export default function HomeClient() {
   const { data: session } = useSession();
   const username = session?.user?.name as string;
+
+  const [socket, setSocket] = useState<any>(null);
+
+  const [amis, setAmis] = useState<any[]>([]);
+  const [pendingReceived, setPendingReceived] = useState<string[]>([]);
+  const [pendingSent, setPendingSent] = useState<string[]>([]);
+  const [groups, setGroups] = useState<any[]>([]);
 
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
@@ -24,53 +27,56 @@ export default function HomeClient() {
   const [callUser, setCallUser] = useState<{ id: string; role: "caller" | "callee" } | null>(null);
   const [incomingCall, setIncomingCall] = useState<string | null>(null);
 
-  const [amis, setAmis] = useState<any[]>([]);
-  const [pendingReceived, setPendingReceived] = useState<string[]>([]);
-  const [pendingSent, setPendingSent] = useState<string[]>([]);
-
-  const [groups, setGroups] = useState<any[]>([]);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-
   const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [search, setSearch] = useState("");
 
-  const [socket, setSocket] = useState<any>(null);
+  // Charger amis
+  const loadFriends = useCallback(async () => {
+    const res = await fetch("/api/friends/list");
+    const data = await res.json();
+    setAmis(data.friends || []);
+    setPendingReceived(data.pendingReceived || []);
+    setPendingSent(data.pendingSent || []);
+  }, []);
 
-  // SOCKET + FRIENDS
+  // Charger groupes
+  const loadGroups = useCallback(async () => {
+    const res = await fetch("/api/groups/list");
+    const data = await res.json();
+    setGroups(data.groups || []);
+  }, []);
+
+  // SOCKET.IO
   useEffect(() => {
     if (!username) return;
 
-    const s = io("https://ami-msec.onrender.com");
+    const s = io("https://ami-msec.onrender.com", { transports: ["websocket"] });
     setSocket(s);
 
     s.emit("setup", username);
-
-    const loadFriends = async () => {
-      const res = await fetch("/api/friends/list");
-      const data = await res.json();
-
-      setAmis(data.friends || []);
-      setPendingReceived(data.pendingReceived || []);
-      setPendingSent(data.pendingSent || []);
-    };
-    loadFriends();
-
     s.emit("user-online", username);
 
-    s.on("update-status", ({ username, online }) => {
-      setAmis((prev) =>
-        prev.map((f) => (f.username === username ? { ...f, online } : f))
-      );
+    loadFriends();
+    loadGroups();
+
+    // Mise à jour du statut
+    s.on("update-status", ({ username: u, online }) => {
+      setAmis((prev) => prev.map((f) => (f.username === u ? { ...f, online } : f)));
     });
 
-    s.on("incoming-call", ({ from }) => setIncomingCall(from));
+    // Appel entrant
+    s.on("incoming-call", ({ from }) => {
+      setIncomingCall(from);
+    });
 
+    // Appel accepté
     s.on("call-accepted", ({ from }) => {
-      const roomId = getRoomId(username, from);
       setIncomingCall(null);
-      setCallUser({ id: roomId, role: "callee" });
+      setCallUser({ id: from, role: "callee" });
     });
 
+    // Appel refusé
     s.on("call-declined", ({ from }) => {
       alert(`${from} a refusé l’appel`);
       setCallUser(null);
@@ -80,37 +86,26 @@ export default function HomeClient() {
       s.emit("user-offline", username);
       s.disconnect();
     };
-  }, [username]);
+  }, [username, loadFriends, loadGroups]);
 
-  // GROUPS
-  useEffect(() => {
-    const loadGroups = async () => {
-      const res = await fetch("/api/groups/list");
-      const data = await res.json();
-      setGroups(data.groups || []);
-    };
-    loadGroups();
-  }, []);
-
+  // Démarrer un appel
   const startCall = (friend: string) => {
     if (!socket || !username) return;
 
     socket.emit("call-user", { from: username, to: friend });
-
-    const roomId = getRoomId(username, friend);
-    setCallUser({ id: roomId, role: "caller" });
+    setCallUser({ id: friend, role: "caller" });
   };
 
+  // Accepter un appel
   const acceptCall = () => {
     if (!socket || !incomingCall || !username) return;
 
     socket.emit("call-accepted", { from: username, to: incomingCall });
-
-    const roomId = getRoomId(username, incomingCall);
-    setCallUser({ id: roomId, role: "callee" });
+    setCallUser({ id: incomingCall, role: "callee" });
     setIncomingCall(null);
   };
 
+  // Refuser un appel
   const rejectCall = () => {
     if (!socket || !incomingCall || !username) return;
 
@@ -118,32 +113,40 @@ export default function HomeClient() {
     setIncomingCall(null);
   };
 
+  // Accepter une demande d’ami
   const acceptFriend = async (from: string) => {
     await fetch("/api/friends/accept", {
       method: "POST",
       body: JSON.stringify({ from, to: username }),
     });
-    window.location.reload();
+    loadFriends();
   };
 
+  // Refuser une demande d’ami
   const declineFriend = async (from: string) => {
     await fetch("/api/friends/decline", {
       method: "POST",
       body: JSON.stringify({ from, to: username }),
     });
-    window.location.reload();
+    loadFriends();
   };
 
   return (
     <main className="h-screen w-full bg-black text-white flex flex-col">
 
-      {/* APPEL */}
+      {/* APPEL VIDEO */}
       {callUser && (
-        <Call roomId={callUser.id} role={callUser.role} onClose={() => setCallUser(null)} />
+        <Call
+          selfId={username}
+          peerId={callUser.id}
+          isCaller={callUser.role === "caller"}
+          onClose={() => setCallUser(null)}
+        />
       )}
 
+      {/* POPUP APPEL ENTRANT */}
       {incomingCall && (
-        <div className="fixed bottom-5 right-5 bg-gray-900 p-4 rounded-xl shadow-xl z-50">
+        <div className="fixed bottom-5 right-5 bg-gray-900 p-4 rounded-xl shadow-xl z-50 border border-yellow-400">
           <p className="font-semibold">{incomingCall} t’appelle 📞</p>
           <div className="flex gap-3 mt-3">
             <button onClick={acceptCall} className="bg-green-600 px-3 py-1 rounded-lg">Accepter</button>
@@ -152,7 +155,7 @@ export default function HomeClient() {
         </div>
       )}
 
-      {/* PAGE PRINCIPALE (LISTE D'AMIS) */}
+      {/* LISTE D'AMIS */}
       <section className="flex-1 overflow-y-auto p-4">
         <h2 className="text-2xl font-bold mb-4 text-yellow-300">Amis</h2>
 
@@ -162,7 +165,7 @@ export default function HomeClient() {
             .map((friend) => (
               <div
                 key={friend._id}
-                className="flex items-center justify-between p-3 bg-gray-900 rounded-xl hover:bg-gray-800"
+                className="flex items-center justify-between p-3 bg-gray-900 rounded-xl hover:bg-gray-800 transition"
               >
                 <div
                   onClick={() => {
@@ -202,7 +205,7 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* BARRE DU BAS (SNAPCHAT STYLE) */}
+      {/* BARRE DU BAS */}
       <div className="w-full bg-gray-900 p-3 flex items-center gap-3 border-t border-gray-800">
         <input
           value={search}
@@ -219,12 +222,11 @@ export default function HomeClient() {
         </button>
       </div>
 
-      {/* DRAWER DEMANDES D'AMIS */}
+      {/* DEMANDES D'AMIS */}
       {showFriendRequests && (
         <div className="fixed bottom-0 left-0 w-full bg-gray-950 p-6 rounded-t-3xl shadow-2xl border-t border-yellow-400 z-50 animate-slide-up">
           <h2 className="text-xl font-bold mb-4 text-yellow-300">Demandes d’amis</h2>
 
-          {/* Reçues */}
           <h3 className="text-lg font-semibold mb-2">Reçues</h3>
           {pendingReceived.length === 0 && <p className="text-gray-400">Aucune demande</p>}
           {pendingReceived.map((user) => (
@@ -237,7 +239,6 @@ export default function HomeClient() {
             </div>
           ))}
 
-          {/* Envoyées */}
           <h3 className="text-lg font-semibold mt-4 mb-2">Envoyées</h3>
           {pendingSent.length === 0 && <p className="text-gray-400">Aucune demande envoyée</p>}
           {pendingSent.map((user) => (
