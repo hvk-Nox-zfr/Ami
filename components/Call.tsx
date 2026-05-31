@@ -13,9 +13,81 @@ export default function Call({ roomId, role, onClose }: CallProps) {
   const remoteVideo = useRef<HTMLVideoElement | null>(null);
 
   const pc = useRef<RTCPeerConnection | null>(null);
-  const isCaller = role === "caller";
+  const localStream = useRef<MediaStream | null>(null);
 
+  const isCaller = role === "caller";
   const [connected, setConnected] = useState(false);
+
+  const [micOn, setMicOn] = useState(true);
+  const [camOn, setCamOn] = useState(true);
+  const [usingFrontCam, setUsingFrontCam] = useState(true);
+
+  const isMobile =
+    typeof window !== "undefined" && window.innerWidth < 768;
+
+  // ⭐ Raccrocher proprement
+  const hangUp = async () => {
+    localStream.current?.getTracks().forEach((t) => t.stop());
+    pc.current?.close();
+
+    await fetch("/api/call/signal", {
+      method: "POST",
+      body: JSON.stringify({
+        roomId,
+        data: { hangup: true },
+      }),
+    });
+
+    onClose();
+  };
+
+  // ⭐ Mute / Unmute micro
+  const toggleMic = () => {
+    const audioTrack = localStream.current?.getAudioTracks()[0];
+    if (!audioTrack) return;
+
+    audioTrack.enabled = !audioTrack.enabled;
+    setMicOn(audioTrack.enabled);
+  };
+
+  // ⭐ Couper / rallumer caméra
+  const toggleCam = () => {
+    const videoTrack = localStream.current?.getVideoTracks()[0];
+    if (!videoTrack) return;
+
+    videoTrack.enabled = !videoTrack.enabled;
+    setCamOn(videoTrack.enabled);
+  };
+
+  // ⭐ Switch caméra avant / arrière (MOBILE)
+  const switchCamera = async () => {
+    if (!isMobile) return;
+
+    const newFacing = usingFrontCam ? "environment" : "user";
+    setUsingFrontCam(!usingFrontCam);
+
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: newFacing },
+      audio: true,
+    });
+
+    // Remplacer la vidéo locale
+    if (localVideo.current) {
+      localVideo.current.srcObject = newStream;
+    }
+
+    // Remplacer la track dans WebRTC
+    const videoSender = pc.current
+      ?.getSenders()
+      .find((s) => s.track?.kind === "video");
+
+    if (videoSender) {
+      videoSender.replaceTrack(newStream.getVideoTracks()[0]);
+    }
+
+    // Mettre à jour le stream local
+    localStream.current = newStream;
+  };
 
   useEffect(() => {
     const start = async () => {
@@ -23,17 +95,20 @@ export default function Call({ roomId, role, onClose }: CallProps) {
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
           { urls: "stun:global.stun.twilio.com:3478" },
+          {
+            urls: "turn:global.turn.twilio.com:3478?transport=udp",
+            username: "test",
+            credential: "test",
+          },
         ],
       });
 
-      // ⭐ RECEVOIR LE FLUX DISTANT
       pc.current.ontrack = (event) => {
         if (remoteVideo.current) {
           remoteVideo.current.srcObject = event.streams[0];
         }
       };
 
-      // ⭐ ENVOYER LES ICE CANDIDATES
       pc.current.onicecandidate = async (event) => {
         if (event.candidate) {
           await fetch("/api/call/signal", {
@@ -46,23 +121,27 @@ export default function Call({ roomId, role, onClose }: CallProps) {
         }
       };
 
-      // ⭐ RÉCUPÉRER LA CAMÉRA + MICRO
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // ⭐ Caméra + micro
+      localStream.current = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" },
         audio: true,
       });
 
       if (localVideo.current) {
-        localVideo.current.srcObject = stream;
+        localVideo.current.srcObject = localStream.current;
       }
 
-      stream.getTracks().forEach((track) => {
-        pc.current?.addTrack(track, stream);
+      localStream.current.getTracks().forEach((track) => {
+        pc.current?.addTrack(track, localStream.current!);
       });
 
-      // ⭐ CALLER → CRÉER L’OFFRE
+      // ⭐ Caller → créer l’offre
       if (isCaller) {
-        const offer = await pc.current.createOffer();
+        const offer = await pc.current.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true,
+        });
+
         await pc.current.setLocalDescription(offer);
 
         await fetch("/api/call/signal", {
@@ -74,13 +153,17 @@ export default function Call({ roomId, role, onClose }: CallProps) {
         });
       }
 
-      // ⭐ POLLING SIGNALING
+      // ⭐ Polling optimisé
       const interval = setInterval(async () => {
         const res = await fetch(`/api/call/signal?roomId=${roomId}`);
         const { data } = await res.json();
 
         for (const d of data) {
-          // ⭐ CALLEE → REÇOIT L’OFFRE
+          if (d.hangup) {
+            hangUp();
+            return;
+          }
+
           if (d.offer && !isCaller) {
             await pc.current?.setRemoteDescription(d.offer);
 
@@ -96,22 +179,18 @@ export default function Call({ roomId, role, onClose }: CallProps) {
             });
           }
 
-          // ⭐ CALLER → REÇOIT LA RÉPONSE
           if (d.answer && isCaller) {
             await pc.current?.setRemoteDescription(d.answer);
             setConnected(true);
           }
 
-          // ⭐ ICE CANDIDATES
           if (d.candidate) {
             try {
               await pc.current?.addIceCandidate(d.candidate);
-            } catch (e) {
-              console.log("Erreur ICE", e);
-            }
+            } catch {}
           }
         }
-      }, 100); // ⭐ 100ms = beaucoup plus fiable sur mobile
+      }, 80);
 
       return () => clearInterval(interval);
     };
@@ -120,40 +199,90 @@ export default function Call({ roomId, role, onClose }: CallProps) {
   }, [roomId, isCaller]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center z-[9999]">
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999]">
 
-      {/* Raccrocher */}
+      {/* ⭐ Raccrocher */}
       <button
-        onClick={onClose}
+        onClick={hangUp}
         className="absolute top-5 right-5 bg-red-600 px-5 py-2 rounded-full text-white text-lg shadow-xl hover:bg-red-700 transition"
       >
-        🔴 Raccrocher
+        🔴
       </button>
 
-      {/* Vidéos */}
-      <div className="flex flex-col md:flex-row gap-6 items-center">
+      {/* ⭐ PC MODE */}
+      {!isMobile && (
+        <div className="relative flex gap-6 items-center">
 
-        {/* Vidéo locale */}
-        <video
-          ref={localVideo}
-          autoPlay
-          muted
-          playsInline
-          className="w-40 h-64 md:w-64 md:h-96 rounded-xl border-2 border-yellow-400 shadow-lg object-cover"
-        />
+          <video
+            ref={remoteVideo}
+            autoPlay
+            playsInline
+            className="w-[600px] h-[400px] rounded-xl border-2 border-green-400 shadow-lg object-cover"
+          />
 
-        {/* Vidéo distante */}
-        <video
-          ref={remoteVideo}
-          autoPlay
-          playsInline
-          className={`w-40 h-64 md:w-64 md:h-96 rounded-xl border-2 ${
-            connected ? "border-green-400" : "border-gray-600"
-          } shadow-lg object-cover`}
-        />
+          <video
+            ref={localVideo}
+            autoPlay
+            muted
+            playsInline
+            className="absolute bottom-5 right-5 w-40 h-28 rounded-xl border-2 border-yellow-400 shadow-lg object-cover"
+          />
+        </div>
+      )}
+
+      {/* ⭐ MOBILE MODE */}
+      {isMobile && (
+        <div className="relative w-full h-full flex items-center justify-center">
+
+          <video
+            ref={remoteVideo}
+            autoPlay
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+
+          <video
+            ref={localVideo}
+            autoPlay
+            muted
+            playsInline
+            className="absolute bottom-6 right-6 w-24 h-24 rounded-full border-2 border-yellow-400 shadow-xl object-cover"
+          />
+        </div>
+      )}
+
+      {/* ⭐ Boutons */}
+      <div className="absolute bottom-10 flex gap-6 bg-gray-900 bg-opacity-60 px-6 py-3 rounded-full shadow-xl">
+
+        <button
+          onClick={toggleMic}
+          className={`px-4 py-2 rounded-full ${
+            micOn ? "bg-green-600" : "bg-red-600"
+          }`}
+        >
+          {micOn ? "🎤" : "🔇"}
+        </button>
+
+        <button
+          onClick={toggleCam}
+          className={`px-4 py-2 rounded-full ${
+            camOn ? "bg-green-600" : "bg-red-600"
+          }`}
+        >
+          {camOn ? "📷" : "🚫"}
+        </button>
+
+        {isMobile && (
+          <button
+            onClick={switchCamera}
+            className="px-4 py-2 rounded-full bg-blue-600"
+          >
+            🔄
+          </button>
+        )}
       </div>
 
-      <p className="mt-4 text-gray-300 text-lg">
+      <p className="absolute bottom-5 text-gray-300 text-lg">
         {connected ? "Connecté ✔" : "Connexion…"}
       </p>
     </div>
