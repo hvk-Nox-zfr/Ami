@@ -1,16 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 export default function AddFriend() {
   const [username, setUsername] = useState("");
+  const { data: session } = useSession();
 
   const addFriend = async () => {
     if (!username.trim()) return;
+    if (!session?.user?.name) return;
 
-    await fetch("/api/friends/add", {
+    await fetch("/api/friends/request", {
       method: "POST",
-      body: JSON.stringify({ friendUsername: username }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: session.user.name, // celui qui envoie
+        to: username,            // celui qu'on ajoute
+      }),
     });
 
     setUsername("");

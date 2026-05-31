@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { connectDB } from "@/lib/mongodb";
-import Message from "@/lib/models/Message";
-import User from "@/lib/models/User";
+import Message from "@/models/Message";
+import User from "@/models/User";
 import { serverPusher } from "@/lib/pusher";
 
 export async function POST(req: Request) {

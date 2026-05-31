@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { connectDB } from "@/lib/mongodb";
-import Group from "@/lib/models/Group";
+import Group from "@/models/Group";
 
 export async function GET() {
   await connectDB();

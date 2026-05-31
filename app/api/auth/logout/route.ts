@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../[...nextauth]/route";
-import User from "@/lib/models/User";
+import User from "@/models/User";
 import { connectDB } from "@/lib/mongodb";
 
 export async function POST() {
