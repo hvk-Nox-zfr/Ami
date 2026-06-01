@@ -39,16 +39,11 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:global.stun.twilio.com:3478" },
         {
-          urls: "turn:webrtcweb.com:7788",
-          username: "muazkh",
-          credential: "muazkh",
-        },
-        {
-          urls: "turn:webrtcweb.com:4455?transport=tcp",
-          username: "muazkh",
-          credential: "muazkh",
+          urls: "turn:global.turn.twilio.com:3478?transport=udp",
+          username: "test",
+          credential: "test",
         },
       ],
     });
@@ -109,10 +104,6 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
       if (isCaller) return;
 
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
-
-      if (!localStreamRef.current) {
-        await startLocalStream();
-      }
 
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
