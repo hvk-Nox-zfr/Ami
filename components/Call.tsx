@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { LiveKitRoom, VideoConference } from "@livekit/components-react";
 import "@livekit/components-styles";
+import "@/styles/livekit.css";
 
 type CallProps = {
   selfId: string;      // ton id (userId)

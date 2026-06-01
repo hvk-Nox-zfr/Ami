@@ -1,0 +1,8 @@
+:root[data-lk-theme="default"] {
+  --lk-bg: #000000;
+  --lk-control-bar-bg: rgba(0,0,0,0.4);
+  --lk-control-hover-bg: rgba(255,255,255,0.2);
+  --lk-control-active-bg: #ff4444;
+  --lk-text-color: white;
+  --lk-border-radius: 14px;
+}
