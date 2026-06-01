@@ -10,7 +10,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.21",
+    "@livekit/components-styles": "^1.2.0",
     "bcryptjs": "^3.0.3",
+    "livekit-client": "^2.19.1",
+    "livekit-server-sdk": "^2.15.4",
     "mongodb": "^7.2.0",
     "mongoose": "^9.6.2",
     "next": "16.2.6",
