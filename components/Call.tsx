@@ -40,14 +40,16 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
         {
-          urls: [
-            "turn:openrelay.metered.ca:80",
-            "turn:openrelay.metered.ca:443",
-            "turn:openrelay.metered.ca:443?transport=tcp",
-          ],
-          username: "openrelayproject",
-          credential: "openrelayproject",
+          urls: "turn:webrtcweb.com:7788",
+          username: "muazkh",
+          credential: "muazkh",
+        },
+        {
+          urls: "turn:webrtcweb.com:4455?transport=tcp",
+          username: "muazkh",
+          credential: "muazkh",
         },
       ],
     });
@@ -56,6 +58,7 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
     pc.ontrack = (event) => {
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = event.streams[0];
+        setConnected(true);
       }
     };
 
@@ -73,7 +76,7 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
         setConnected(true);
       }
       if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-        // on pourrait afficher un message ou fermer l’appel
+        // on pourrait fermer automatiquement l’appel si tu veux
       }
     };
 
@@ -107,18 +110,15 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
     socket.on("webrtc-offer", async ({ offer }) => {
       if (isCaller) return; // l’appelant ne traite pas les offers
 
-      if (!pc.currentRemoteDescription) {
-        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
-        // si pour une raison quelconque le flux local n’est pas prêt, on le démarre
-        if (!localStreamRef.current) {
-          await startMedia();
-        }
-
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        socket.emit("webrtc-answer", { to: peerId, answer });
+      if (!localStreamRef.current) {
+        await startMedia();
       }
+
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit("webrtc-answer", { to: peerId, answer });
     });
 
     // recevoir answer (côté caller)
