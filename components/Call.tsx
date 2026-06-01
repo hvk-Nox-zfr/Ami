@@ -27,9 +27,8 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
   const isMobile =
     typeof window !== "undefined" && window.innerWidth < 768;
 
-  // --- init socket + webrtc ---
   useEffect(() => {
-    const socket = io(SIGNALING_URL);
+    const socket = io(SIGNALING_URL, { transports: ["websocket"] });
     socketRef.current = socket;
 
     socket.on("connect", () => {
@@ -39,7 +38,15 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:global.stun.twilio.com:3478" },
+        {
+          urls: [
+            "turn:openrelay.metered.ca:80",
+            "turn:openrelay.metered.ca:443",
+            "turn:openrelay.metered.ca:443?transport=tcp",
+          ],
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
       ],
     });
     pcRef.current = pc;
@@ -59,9 +66,18 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
       }
     };
 
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === "connected") {
+        setConnected(true);
+      }
+      if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+        // on peut éventuellement fermer l’appel ici
+      }
+    };
+
     const startMedia = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: { width: 1280, height: 720 },
         audio: true,
       });
       localStreamRef.current = stream;
@@ -83,19 +99,22 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
 
     startMedia();
 
-    // recevoir offer
+    // recevoir offer (côté callee)
     socket.on("webrtc-offer", async ({ offer }) => {
-      if (!pc.currentRemoteDescription && pc.signalingState !== "stable") return;
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      socket.emit("webrtc-answer", { to: peerId, answer });
+      if (isCaller) return; // l’appelant ne traite pas les offers
+      if (!pc.currentRemoteDescription) {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit("webrtc-answer", { to: peerId, answer });
+      }
     });
 
-    // recevoir answer
+    // recevoir answer (côté caller)
     socket.on("webrtc-answer", async ({ answer }) => {
-      await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      setConnected(true);
+      if (!pc.currentRemoteDescription) {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      }
     });
 
     // recevoir ICE
@@ -103,7 +122,7 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
       try {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch {
-        // ignore
+        // on ignore les erreurs d’ICE
       }
     });
 
@@ -147,13 +166,21 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
+    <div className="fixed inset-0 bg-gradient-to-br from-black via-gray-950 to-black flex items-center justify-center z-[9999]">
+      {/* Header */}
+      <div className="absolute top-4 left-4 text-sm text-gray-300">
+        <p className="font-semibold text-white">Appel avec {peerId}</p>
+        <p className="text-xs text-gray-400">
+          {connected ? "Connecté" : "Connexion en cours…"}
+        </p>
+      </div>
+
       {/* Raccrocher */}
       <button
         onClick={hangUp}
-        className="absolute top-5 right-5 bg-red-600 px-5 py-2 rounded-full text-white text-lg shadow-xl hover:bg-red-700 transition"
+        className="absolute top-4 right-4 bg-red-600 px-5 py-2 rounded-full text-white text-sm shadow-xl hover:bg-red-700 transition flex items-center gap-2"
       >
-        Raccrocher
+        <span>Raccrocher</span>
       </button>
 
       {/* PC */}
@@ -163,14 +190,14 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
             ref={remoteVideoRef}
             autoPlay
             playsInline
-            className="w-[600px] h-[400px] rounded-xl border-2 border-green-400 shadow-lg object-cover bg-black"
+            className="w-[640px] h-[420px] rounded-2xl border border-gray-700 shadow-2xl object-cover bg-black"
           />
           <video
             ref={localVideoRef}
             autoPlay
             muted
             playsInline
-            className="absolute bottom-5 right-5 w-40 h-28 rounded-xl border-2 border-yellow-400 shadow-lg object-cover bg-black"
+            className="absolute bottom-6 right-6 w-40 h-28 rounded-xl border border-yellow-400 shadow-xl object-cover bg-black"
           />
         </div>
       )}
@@ -189,54 +216,54 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
             autoPlay
             muted
             playsInline
-            className="absolute bottom-6 right-6 w-24 h-24 rounded-full border-2 border-yellow-400 shadow-xl object-cover bg-black"
+            className="absolute bottom-6 right-6 w-24 h-24 rounded-full border border-yellow-400 shadow-xl object-cover bg-black"
           />
         </div>
       )}
 
-      {/* Boutons futuristes */}
-      <div className="absolute bottom-10 call-controls">
+      {/* Boutons */}
+      <div className="absolute bottom-10 flex gap-4 items-center">
         <button
           onClick={toggleMic}
-          className={`neon-btn ${micOn ? "green" : "red"}`}
+          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition ${
+            micOn ? "bg-emerald-500 hover:bg-emerald-600" : "bg-red-600 hover:bg-red-700"
+          }`}
         >
           {micOn ? (
-            <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M12 1v14a4 4 0 0 0 4-4V5a4 4 0 0 0-8 0v6a4 4 0 0 0 4 4" />
-              <path d="M19 10a7 7 0 0 1-14 0" />
+            <svg width="22" height="22" fill="none" stroke="white" strokeWidth="2">
+              <path d="M12 1v10a3 3 0 0 0 6 0V7a6 6 0 0 0-12 0v4a3 3 0 0 0 6 0" />
+              <path d="M5 10a7 7 0 0 0 14 0" />
               <path d="M12 21v-4" />
             </svg>
           ) : (
-            <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M1 1l22 22" />
-              <path d="M12 1v5m0 4v5a4 4 0 0 0 4-4V9" />
-              <path d="M19 10a7 7 0 0 1-14 0" />
+            <svg width="22" height="22" fill="none" stroke="white" strokeWidth="2">
+              <path d="M1 1l20 20" />
+              <path d="M12 1v5m0 4v3a3 3 0 0 0 5-2V9" />
+              <path d="M5 10a7 7 0 0 0 9 6" />
             </svg>
           )}
         </button>
 
         <button
           onClick={toggleCam}
-          className={`neon-btn ${camOn ? "green" : "red"}`}
+          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition ${
+            camOn ? "bg-emerald-500 hover:bg-emerald-600" : "bg-red-600 hover:bg-red-700"
+          }`}
         >
           {camOn ? (
-            <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2">
-              <rect x="3" y="5" width="13" height="14" rx="2" />
-              <path d="M16 8l5-3v14l-5-3z" />
+            <svg width="22" height="22" fill="none" stroke="white" strokeWidth="2">
+              <rect x="3" y="5" width="13" height="12" rx="2" />
+              <path d="M16 8l4-3v12l-4-3z" />
             </svg>
           ) : (
-            <svg width="24" height="24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M1 1l22 22" />
-              <rect x="3" y="5" width="13" height="14" rx="2" />
-              <path d="M16 8l5-3v14l-5-3z" />
+            <svg width="22" height="22" fill="none" stroke="white" strokeWidth="2">
+              <path d="M1 1l20 20" />
+              <rect x="3" y="5" width="13" height="12" rx="2" />
+              <path d="M16 8l4-3v12l-4-3z" />
             </svg>
           )}
         </button>
       </div>
-
-      <p className="absolute bottom-4 text-gray-300 text-sm">
-        {connected ? "Connecté ✔" : "Connexion…"}
-      </p>
     </div>
   );
 }
