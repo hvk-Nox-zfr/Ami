@@ -28,6 +28,8 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
     typeof window !== "undefined" && window.innerWidth < 768;
 
   useEffect(() => {
+    let cleaned = false;
+
     const socket = io(SIGNALING_URL, { transports: ["websocket"] });
     socketRef.current = socket;
 
@@ -71,7 +73,7 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
         setConnected(true);
       }
       if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-        // on peut éventuellement fermer l’appel ici
+        // on pourrait afficher un message ou fermer l’appel
       }
     };
 
@@ -80,6 +82,8 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
         video: { width: 1280, height: 720 },
         audio: true,
       });
+      if (cleaned) return;
+
       localStreamRef.current = stream;
 
       if (localVideoRef.current) {
@@ -102,8 +106,15 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
     // recevoir offer (côté callee)
     socket.on("webrtc-offer", async ({ offer }) => {
       if (isCaller) return; // l’appelant ne traite pas les offers
+
       if (!pc.currentRemoteDescription) {
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+        // si pour une raison quelconque le flux local n’est pas prêt, on le démarre
+        if (!localStreamRef.current) {
+          await startMedia();
+        }
+
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         socket.emit("webrtc-answer", { to: peerId, answer });
@@ -133,6 +144,9 @@ export default function Call({ selfId, peerId, isCaller, onClose }: CallProps) {
     });
 
     const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
       pcRef.current?.close();
       socketRef.current?.disconnect();
