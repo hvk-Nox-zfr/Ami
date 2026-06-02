@@ -197,12 +197,12 @@ export default function HomeClient() {
           className="flex-1 p-2 bg-gray-800 rounded-xl"
         />
 
-        <button
-          onClick={() => router.push("app/friends")}
-          className="bg-yellow-300 text-black p-2 rounded-xl hover:bg-yellow-400"
-        >
-          👥
-        </button>
+      <button
+        onClick={() => router.push("/friends")}
+        className="bg-yellow-300 text-black p-2 rounded-xl hover:bg-yellow-400"
+      >
+        👥
+      </button>
       </div>
     </main>
   );
