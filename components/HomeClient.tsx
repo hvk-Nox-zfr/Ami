@@ -198,7 +198,7 @@ export default function HomeClient() {
         />
 
         <button
-          onClick={() => router.push("/friends")}
+          onClick={() => router.push("app/friends")}
           className="bg-yellow-300 text-black p-2 rounded-xl hover:bg-yellow-400"
         >
           👥
