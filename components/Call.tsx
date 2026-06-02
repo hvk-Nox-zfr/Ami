@@ -15,6 +15,9 @@ declare global {
       "lk-video": any;
       "lk-microphone-button": any;
       "lk-camera-button": any;
+      "lk-participant-tile": any;
+      "lk-audio-analyzer": any;
+      "lk-control-bar": any;
     }
   }
 }
@@ -105,62 +108,23 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
         onDisconnected={onClose}
         connect={true}
         data-lk-theme="default"
-        className="w-full h-full"
+        className="w-full h-full flex items-center justify-center"
       >
-        <div className="w-full h-full relative bg-black">
+        <div className="text-white text-center space-y-6">
 
-          {/* --- PC MODE (FaceTime) --- */}
-          <div className="hidden md:block w-full h-full relative">
-            <lk-video
-              class="absolute inset-0 w-full h-full object-cover"
-              participant="remote"
-              source="camera"
-            ></lk-video>
+          <p className="text-lg">Appel en cours…</p>
 
-            <lk-video
-              class="absolute bottom-6 right-6 w-48 h-32 rounded-xl border border-white/20 shadow-xl object-cover"
-              participant="local"
-              source="camera"
-              muted
-            ></lk-video>
+          <div className="flex gap-6 justify-center">
+            <lk-microphone-button class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md text-white"></lk-microphone-button>
 
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
-              <lk-microphone-button class="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md text-white"></lk-microphone-button>
-              <button
-                onClick={onClose}
-                className="w-14 h-14 rounded-full bg-red-600 text-white flex items-center justify-center"
-              >
-                ⛔
-              </button>
-              <lk-camera-button class="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md text-white"></lk-camera-button>
-            </div>
-          </div>
+            <button
+              onClick={onClose}
+              className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center"
+            >
+              ⛔
+            </button>
 
-          {/* --- MOBILE MODE (Snapchat) --- */}
-          <div className="block md:hidden w-full h-full relative">
-            <lk-video
-              class="absolute inset-0 w-full h-full object-cover"
-              participant="remote"
-              source="camera"
-            ></lk-video>
-
-            <lk-video
-              class="absolute bottom-6 right-6 w-24 h-24 rounded-full border-2 border-white shadow-xl object-cover"
-              participant="local"
-              source="camera"
-              muted
-            ></lk-video>
-
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-6">
-              <lk-microphone-button class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md text-white"></lk-microphone-button>
-              <button
-                onClick={onClose}
-                className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center"
-              >
-                ⛔
-              </button>
-              <lk-camera-button class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md text-white"></lk-camera-button>
-            </div>
+            <lk-camera-button class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md text-white"></lk-camera-button>
           </div>
 
         </div>
