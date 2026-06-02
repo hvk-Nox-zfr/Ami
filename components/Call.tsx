@@ -1,9 +1,7 @@
 "use client";
 
-// Active les Web Components LiveKit AVANT tout
+// Active les Web Components LiveKit (plus besoin de register())
 import "@livekit/components-core/dist/web-components";
-import { register } from "@livekit/components-core";
-register();
 
 import { useEffect, useMemo, useState } from "react";
 import { LiveKitRoom } from "@livekit/components-react";
