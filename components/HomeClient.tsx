@@ -3,16 +3,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { io } from "socket.io-client";
+import { useRouter } from "next/navigation";
 
 import Chat from "@/components/Chat";
 import GroupChat from "@/components/GroupChat";
 import CreateGroup from "@/components/CreateGroup";
 import Call from "@/components/Call";
-import AddFriend from "@/components/AddFriend";
 
 export default function HomeClient() {
   const { data: session } = useSession();
   const username = session?.user?.name as string;
+
+  const router = useRouter();
 
   const [socket, setSocket] = useState<any>(null);
 
@@ -28,7 +30,6 @@ export default function HomeClient() {
   const [incomingCall, setIncomingCall] = useState<string | null>(null);
 
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [showFriendRequests, setShowFriendRequests] = useState(false);
   const [search, setSearch] = useState("");
 
   // Charger amis
@@ -111,24 +112,6 @@ export default function HomeClient() {
 
     socket.emit("call-declined", { from: username, to: incomingCall });
     setIncomingCall(null);
-  };
-
-  // Accepter une demande d’ami
-  const acceptFriend = async (from: string) => {
-    await fetch("/api/friends/accept", {
-      method: "POST",
-      body: JSON.stringify({ from, to: username }),
-    });
-    loadFriends();
-  };
-
-  // Refuser une demande d’ami
-  const declineFriend = async (from: string) => {
-    await fetch("/api/friends/decline", {
-      method: "POST",
-      body: JSON.stringify({ from, to: username }),
-    });
-    loadFriends();
   };
 
   return (
@@ -215,46 +198,12 @@ export default function HomeClient() {
         />
 
         <button
-          onClick={() => setShowFriendRequests(true)}
+          onClick={() => router.push("/friends")}
           className="bg-yellow-300 text-black p-2 rounded-xl hover:bg-yellow-400"
         >
           👥
         </button>
       </div>
-
-      {/* DEMANDES D'AMIS */}
-      {showFriendRequests && (
-        <div className="fixed bottom-0 left-0 w-full bg-gray-950 p-6 rounded-t-3xl shadow-2xl border-t border-yellow-400 z-50 animate-slide-up">
-          <h2 className="text-xl font-bold mb-4 text-yellow-300">Demandes d’amis</h2>
-
-          <h3 className="text-lg font-semibold mb-2">Reçues</h3>
-          {pendingReceived.length === 0 && <p className="text-gray-400">Aucune demande</p>}
-          {pendingReceived.map((user) => (
-            <div key={user} className="flex justify-between items-center bg-gray-900 p-3 rounded-xl mb-2">
-              <p>{user}</p>
-              <div className="flex gap-2">
-                <button onClick={() => acceptFriend(user)} className="bg-green-600 px-3 py-1 rounded-lg">Accepter</button>
-                <button onClick={() => declineFriend(user)} className="bg-red-600 px-3 py-1 rounded-lg">Refuser</button>
-              </div>
-            </div>
-          ))}
-
-          <h3 className="text-lg font-semibold mt-4 mb-2">Envoyées</h3>
-          {pendingSent.length === 0 && <p className="text-gray-400">Aucune demande envoyée</p>}
-          {pendingSent.map((user) => (
-            <div key={user} className="bg-gray-900 p-3 rounded-xl mb-2">
-              <p>{user} — <span className="text-yellow-300">En attente…</span></p>
-            </div>
-          ))}
-
-          <button
-            onClick={() => setShowFriendRequests(false)}
-            className="mt-4 w-full bg-yellow-300 text-black p-2 rounded-xl"
-          >
-            Fermer
-          </button>
-        </div>
-      )}
     </main>
   );
 }
