@@ -1,6 +1,6 @@
 "use client";
 
-// OBLIGATOIRE : active les Web Components LiveKit
+// Active les Web Components LiveKit AVANT tout
 import "@livekit/components-core/dist/web-components";
 import { register } from "@livekit/components-core";
 register();
@@ -9,6 +9,17 @@ import { useEffect, useMemo, useState } from "react";
 import { LiveKitRoom } from "@livekit/components-react";
 import "@livekit/components-styles";
 import "@/styles/livekit.css";
+
+// Déclare les balises <lk-...> pour éviter les erreurs Next/TS
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "lk-video": any;
+      "lk-microphone-button": any;
+      "lk-camera-button": any;
+    }
+  }
+}
 
 type CallProps = {
   selfId: string;
@@ -102,14 +113,12 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
 
           {/* --- PC MODE (FaceTime) --- */}
           <div className="hidden md:block w-full h-full relative">
-            {/* Remote video */}
             <lk-video
               class="absolute inset-0 w-full h-full object-cover"
               participant="remote"
               source="camera"
             ></lk-video>
 
-            {/* Local video */}
             <lk-video
               class="absolute bottom-6 right-6 w-48 h-32 rounded-xl border border-white/20 shadow-xl object-cover"
               participant="local"
@@ -117,7 +126,6 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
               muted
             ></lk-video>
 
-            {/* Controls */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
               <lk-microphone-button class="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md text-white"></lk-microphone-button>
               <button
@@ -132,14 +140,12 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
 
           {/* --- MOBILE MODE (Snapchat) --- */}
           <div className="block md:hidden w-full h-full relative">
-            {/* Remote video */}
             <lk-video
               class="absolute inset-0 w-full h-full object-cover"
               participant="remote"
               source="camera"
             ></lk-video>
 
-            {/* Local video (rond style Snap) */}
             <lk-video
               class="absolute bottom-6 right-6 w-24 h-24 rounded-full border-2 border-white shadow-xl object-cover"
               participant="local"
@@ -147,7 +153,6 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
               muted
             ></lk-video>
 
-            {/* Controls style Snap */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-6">
               <lk-microphone-button class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md text-white"></lk-microphone-button>
               <button
