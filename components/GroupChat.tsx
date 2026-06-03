@@ -35,9 +35,10 @@ export default function GroupChat({ groupId }: GroupChatProps) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Pusher temps réel
+  // Temps réel Pusher
   useEffect(() => {
-    if (!groupId) return;
+    // IMPORTANT : empêcher l’erreur TypeScript
+    if (!clientPusher) return;
 
     const channel = clientPusher.subscribe(`group-${groupId}`);
 
@@ -76,7 +77,6 @@ export default function GroupChat({ groupId }: GroupChatProps) {
         {messages.map((msg, i) => {
           const isMe = msg.sender === session?.user?.email;
 
-          // On récupère le pseudo si dispo
           const username = isMe
             ? "Moi"
             : msg.senderUsername || msg.sender;
@@ -86,12 +86,10 @@ export default function GroupChat({ groupId }: GroupChatProps) {
               key={i}
               className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
             >
-              {/* Nom de l'auteur */}
               <span className="text-xs text-gray-400 mb-1">
                 {username}
               </span>
 
-              {/* Bulle */}
               <div
                 className={`p-2 rounded-lg max-w-[70%] ${
                   isMe
