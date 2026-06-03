@@ -50,7 +50,7 @@ export default function GroupChat({ groupId }: GroupChatProps) {
 
     return () => {
       channel.unbind("new-group-message", handler);
-      clientPusher.unsubscribe(`group-${groupId}`);
+      clientPusher?.unsubscribe(`group-${groupId}`);
     };
   }, [groupId]);
 
