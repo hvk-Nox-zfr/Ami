@@ -17,7 +17,6 @@ export default function Chat({
   const [otherUserEmail, setOtherUserEmail] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Convertir pseudo → email
   const fetchEmail = async () => {
     const res = await fetch("/api/users/getEmailFromUsername", {
       method: "POST",
@@ -29,7 +28,6 @@ export default function Chat({
     setOtherUserEmail(data.email);
   };
 
-  // Charger messages
   const loadMessages = async (email: string) => {
     const res = await fetch("/api/messages/get", {
       method: "POST",
@@ -53,8 +51,10 @@ export default function Chat({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Temps réel Pusher
+  // 🔥 FIX Pusher + TypeScript
   useEffect(() => {
+    if (!clientPusher) return; // ← OBLIGATOIRE
+
     const channel = clientPusher.subscribe("chat");
 
     const handler = (data: any) => {
@@ -73,11 +73,10 @@ export default function Chat({
 
     return () => {
       channel.unbind("new-message", handler);
-      clientPusher.unsubscribe("chat");
+      clientPusher?.unsubscribe("chat"); // ← FIX ICI
     };
   }, [otherUserEmail, session?.user?.email]);
 
-  // Envoyer message
   const sendMessage = async () => {
     if (!content.trim()) return;
 
@@ -95,8 +94,6 @@ export default function Chat({
 
   return (
     <div className="flex flex-col h-full p-4">
-
-      {/* 🔥 Bouton d'appel */}
       <div className="flex justify-end mb-3">
         <button
           onClick={() => onCall(otherUser)}
@@ -106,7 +103,6 @@ export default function Chat({
         </button>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-2">
         {messages.map((msg, i) => {
           const isMe = msg.sender === session?.user?.email;
@@ -127,7 +123,6 @@ export default function Chat({
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <div className="flex gap-2 mt-4">
         <input
           className="flex-1 border p-2 rounded-lg"
