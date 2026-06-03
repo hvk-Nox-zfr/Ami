@@ -1,6 +1,6 @@
 "use client";
 
-import "@livekit/components-core/dist/styles.css";
+import "@livekit/components-core/styles.css";
 import "@/styles/livekit.css";
 
 import { useEffect, useMemo, useState } from "react";
