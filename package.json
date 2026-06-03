@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@livekit/components-core": "0.12.13",
+    "@livekit/components-styles": "0.12.12",
     "@livekit/components-react": "2.9.21",
-    "@livekit/components-styles": "0.12.13",
     "bcryptjs": "^3.0.3",
     "livekit-client": "^2.19.1",
     "livekit-server-sdk": "^2.15.4",
