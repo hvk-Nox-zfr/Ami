@@ -1,38 +1,27 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
-import { connectDB } from "@/lib/mongodb";
-import Message from "@/models/Message";
-import User from "@/models/User";
-import { serverPusher } from "@/lib/pusher";
+import Pusher from "pusher";
 
-export async function POST(req: Request) {
-  await connectDB();
-
-  const session = (await getServerSession(authOptions)) as Session;
-
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+export async function POST(request: Request) {
+  // Empêche l'exécution pendant le build Vercel
+  if (
+    !process.env.PUSHER_KEY ||
+    !process.env.PUSHER_SECRET ||
+    !process.env.PUSHER_APP_ID
+  ) {
+    console.log("Pusher disabled during build");
+    return Response.json({ ok: true });
   }
 
-  const { receiver, content } = await req.json();
+  const { message, to } = await request.json();
 
-  // receiver = pseudo → on récupère l'email
-  const receiverUser = await User.findOne({ username: receiver });
-
-  if (!receiverUser) {
-    return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
-  }
-
-  const newMessage = await Message.create({
-    sender: session.user.email,
-    receiver: receiverUser.email, // ✔ email correct
-    content,
-    timestamp: Date.now(),
+  const pusher = new Pusher({
+    appId: process.env.PUSHER_APP_ID!,
+    key: process.env.PUSHER_KEY!,
+    secret: process.env.PUSHER_SECRET!,
+    cluster: "eu",
+    useTLS: true,
   });
 
-  await serverPusher.trigger("chat", "new-message", newMessage);
+  await pusher.trigger(`chat-${to}`, "new-message", { message });
 
-  return NextResponse.json({ success: true });
+  return Response.json({ ok: true });
 }
