@@ -4,38 +4,32 @@ import PusherClient from "pusher-js";
 // ----------------------
 // SERVER PUSHER (API)
 // ----------------------
-let serverPusher: Pusher | null = null;
-
-if (
+export const serverPusher =
   process.env.PUSHER_APP_ID &&
   process.env.PUSHER_KEY &&
   process.env.PUSHER_SECRET &&
   process.env.PUSHER_CLUSTER
-) {
-  serverPusher = new Pusher({
-    appId: process.env.PUSHER_APP_ID,
-    key: process.env.PUSHER_KEY,
-    secret: process.env.PUSHER_SECRET,
-    cluster: process.env.PUSHER_CLUSTER,
-    useTLS: true,
-  });
-}
-
-export { serverPusher };
+    ? new Pusher({
+        appId: process.env.PUSHER_APP_ID,
+        key: process.env.PUSHER_KEY,
+        secret: process.env.PUSHER_SECRET,
+        cluster: process.env.PUSHER_CLUSTER,
+        useTLS: true,
+      })
+    : null;
 
 // ----------------------
 // CLIENT PUSHER (Browser)
 // ----------------------
-let clientPusher: PusherClient | null = null;
+let client: PusherClient | null = null;
 
-if (
-  typeof window !== "undefined" &&
-  process.env.NEXT_PUBLIC_PUSHER_KEY &&
-  process.env.NEXT_PUBLIC_PUSHER_CLUSTER
-) {
-  clientPusher = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY, {
-    cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
-  });
+if (typeof window !== "undefined") {
+  const key = process.env.NEXT_PUBLIC_PUSHER_KEY;
+  const cluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+
+  if (key && cluster) {
+    client = new PusherClient(key, { cluster });
+  }
 }
 
-export { clientPusher };
+export const clientPusher = client;
