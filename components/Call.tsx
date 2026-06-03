@@ -1,26 +1,10 @@
 "use client";
 
-// Active les Web Components LiveKit (plus besoin de register())
-import "@livekit/components-core/dist/web-components";
-
-import { useEffect, useMemo, useState } from "react";
-import { LiveKitRoom } from "@livekit/components-react";
-import "@livekit/components-styles";
+import "@livekit/components-core/dist/styles.css";
 import "@/styles/livekit.css";
 
-// Déclare les balises <lk-...> pour éviter les erreurs Next/TS
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "lk-video": any;
-      "lk-microphone-button": any;
-      "lk-camera-button": any;
-      "lk-participant-tile": any;
-      "lk-audio-analyzer": any;
-      "lk-control-bar": any;
-    }
-  }
-}
+import { useEffect, useMemo, useState } from "react";
+import { LiveKitRoom, useRoomContext } from "@livekit/components-react";
 
 type CallProps = {
   selfId: string;
@@ -28,6 +12,40 @@ type CallProps = {
   isCaller: boolean;
   onClose: () => void;
 };
+
+// Bouton micro compatible LiveKit 0.12.1
+function MicButton() {
+  const room = useRoomContext();
+  const local = room?.localParticipant;
+
+  const enabled = local?.isMicrophoneEnabled ?? false;
+
+  return (
+    <button
+      onClick={() => local?.setMicrophoneEnabled(!enabled)}
+      className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md text-white"
+    >
+      {enabled ? "🎤" : "🔇"}
+    </button>
+  );
+}
+
+// Bouton caméra compatible LiveKit 0.12.1
+function CamButton() {
+  const room = useRoomContext();
+  const local = room?.localParticipant;
+
+  const enabled = local?.isCameraEnabled ?? false;
+
+  return (
+    <button
+      onClick={() => local?.setCameraEnabled(!enabled)}
+      className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md text-white"
+    >
+      {enabled ? "📷" : "🚫"}
+    </button>
+  );
+}
 
 export default function Call({ selfId, peerId, onClose }: CallProps) {
   const [token, setToken] = useState<string | null>(null);
@@ -94,7 +112,6 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
 
   return (
     <div className="fixed inset-0 bg-black z-[9999]">
-      {/* Bouton raccrocher */}
       <button
         onClick={onClose}
         className="absolute top-4 right-4 z-[10000] bg-red-600 px-5 py-2 rounded-full text-white text-sm shadow-xl hover:bg-red-700 transition"
@@ -111,22 +128,18 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
         className="w-full h-full flex items-center justify-center"
       >
         <div className="text-white text-center space-y-6">
-
           <p className="text-lg">Appel en cours…</p>
 
           <div className="flex gap-6 justify-center">
-            <lk-microphone-button class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md text-white"></lk-microphone-button>
-
+            <MicButton />
             <button
               onClick={onClose}
               className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center"
             >
               ⛔
             </button>
-
-            <lk-camera-button class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md text-white"></lk-camera-button>
+            <CamButton />
           </div>
-
         </div>
       </LiveKitRoom>
     </div>
