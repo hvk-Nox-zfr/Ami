@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { connectDB } from "@/lib/mongodb";
+import connect from "@/lib/mongodb";
 import User from "@/models/User";
 
 export async function GET() {
-  await connectDB();
+  await connect();
 
   const session = (await getServerSession(authOptions)) as Session | null;
 

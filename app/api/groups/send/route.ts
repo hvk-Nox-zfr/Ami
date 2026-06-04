@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb";
+import connect from "@/lib/mongodb";
 import GroupMessage from "@/models/GroupMessage";
 import User from "@/models/User";
 
 export async function POST(req: Request) {
-  await connectDB();
+  await connect();
 
   const { groupId } = await req.json();
 

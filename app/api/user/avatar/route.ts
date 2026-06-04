@@ -3,10 +3,10 @@ import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import User from "@/models/User";
-import { connectDB } from "@/lib/mongodb";
+import connect from "@/lib/mongodb";
 
 export async function POST(req: Request) {
-  await connectDB();
+  await connect();
 
   // Typage propre pour éviter les erreurs TS
   const session = (await getServerSession(authOptions)) as Session | null;
