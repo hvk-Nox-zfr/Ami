@@ -28,7 +28,7 @@ export default function FriendsPage() {
         return;
       }
 
-      const res = await fetch("/api/friends/search?query=" + search);
+      const res = await fetch("/api/users/search?query=" + search);
       const data = await res.json();
       setResults(data.results || []);
     };
