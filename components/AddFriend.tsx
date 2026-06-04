@@ -26,15 +26,15 @@ export default function AddFriend() {
     setResults(data.users || []);
   };
 
-  const addFriend = async (friendName: string) => {
+  const addFriend = async (friendUsername: string) => {
     if (!session?.user?.name) return;
 
     await fetch("/api/friends/request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: session.user.name,
-        to: friendName,
+        from: session.user.name,     // pseudo de l'utilisateur connecté
+        to: friendUsername,          // pseudo de l'ami
       }),
     });
 
@@ -52,16 +52,15 @@ export default function AddFriend() {
         className="w-full p-2 bg-gray-800 rounded-xl"
       />
 
-      {/* Résultats */}
       {results.length > 0 && (
         <div className="bg-gray-900 p-2 rounded-xl space-y-1">
           {results.map((u) => (
             <div
               key={u.email}
-              onClick={() => addFriend(u.name)}
+              onClick={() => addFriend(u.username)}
               className="p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600"
             >
-              {u.name}
+              {u.username}
             </div>
           ))}
         </div>

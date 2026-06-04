@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import User from "@/models/User"; // adapte selon ton chemin DB
 import connect from "@/lib/mongodb";
+import User from "@/models/User";
 
 export async function POST(req: Request) {
   await connect();
@@ -12,8 +12,8 @@ export async function POST(req: Request) {
   }
 
   const users = await User.find({
-    name: { $regex: username, $options: "i" },
-  }).select("name email");
+    username: { $regex: username, $options: "i" },
+  }).select("username email avatar");
 
   return NextResponse.json({ users });
 }
