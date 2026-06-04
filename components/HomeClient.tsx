@@ -6,10 +6,7 @@ import { io } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
-// Call doit être chargé en dynamique sinon Next.js plante
-const Call = dynamic(() => import("@/components/Call"), {
-  ssr: false,
-});
+const Call = dynamic(() => import("@/components/Call"), { ssr: false });
 
 import Chat from "@/components/Chat";
 import GroupChat from "@/components/GroupChat";
@@ -17,7 +14,9 @@ import CreateGroup from "@/components/CreateGroup";
 
 export default function HomeClient() {
   const { data: session } = useSession();
-  const username = session?.user?.name as string;
+
+  // 🔥 CORRIGÉ : on utilise username, pas name
+  const username = session?.user?.username as string;
 
   const router = useRouter();
 
@@ -37,7 +36,6 @@ export default function HomeClient() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Charger amis
   const loadFriends = useCallback(async () => {
     const res = await fetch("/api/friends/list");
     const data = await res.json();
@@ -46,14 +44,12 @@ export default function HomeClient() {
     setPendingSent(data.pendingSent || []);
   }, []);
 
-  // Charger groupes
   const loadGroups = useCallback(async () => {
     const res = await fetch("/api/groups/list");
     const data = await res.json();
     setGroups(data.groups || []);
   }, []);
 
-  // SOCKET.IO
   useEffect(() => {
     if (!username) return;
 
@@ -66,23 +62,19 @@ export default function HomeClient() {
     loadFriends();
     loadGroups();
 
-    // Mise à jour du statut
     s.on("update-status", ({ username: u, online }) => {
       setAmis((prev) => prev.map((f) => (f.username === u ? { ...f, online } : f)));
     });
 
-    // Appel entrant
     s.on("incoming-call", ({ from }) => {
       setIncomingCall(from);
     });
 
-    // Appel accepté
     s.on("call-accepted", ({ from }) => {
       setIncomingCall(null);
       setCallUser({ id: from, role: "callee" });
     });
 
-    // Appel refusé
     s.on("call-declined", ({ from }) => {
       alert(`${from} a refusé l’appel`);
       setCallUser(null);
@@ -94,7 +86,6 @@ export default function HomeClient() {
     };
   }, [username, loadFriends, loadGroups]);
 
-  // Démarrer un appel
   const startCall = (friend: string) => {
     if (!socket || !username) return;
 
@@ -102,7 +93,6 @@ export default function HomeClient() {
     setCallUser({ id: friend, role: "caller" });
   };
 
-  // Accepter un appel
   const acceptCall = () => {
     if (!socket || !incomingCall || !username) return;
 
@@ -111,7 +101,6 @@ export default function HomeClient() {
     setIncomingCall(null);
   };
 
-  // Refuser un appel
   const rejectCall = () => {
     if (!socket || !incomingCall || !username) return;
 
@@ -122,7 +111,6 @@ export default function HomeClient() {
   return (
     <main className="h-screen w-full bg-black text-white flex flex-col">
 
-      {/* APPEL VIDEO */}
       {callUser && (
         <Call
           selfId={username}
@@ -132,7 +120,6 @@ export default function HomeClient() {
         />
       )}
 
-      {/* POPUP APPEL ENTRANT */}
       {incomingCall && (
         <div className="fixed bottom-5 right-5 bg-gray-900 p-4 rounded-xl shadow-xl z-50 border border-yellow-400">
           <p className="font-semibold">{incomingCall} t’appelle 📞</p>
@@ -143,7 +130,6 @@ export default function HomeClient() {
         </div>
       )}
 
-      {/* LISTE D'AMIS */}
       <section className="flex-1 overflow-y-auto p-4">
         <h2 className="text-2xl font-bold mb-4 text-yellow-300">Amis</h2>
 
@@ -193,7 +179,6 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* BARRE DU BAS */}
       <div className="w-full bg-gray-900 p-3 flex items-center gap-3 border-t border-gray-800">
         <input
           value={search}

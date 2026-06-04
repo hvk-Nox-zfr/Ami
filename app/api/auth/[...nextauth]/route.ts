@@ -18,7 +18,7 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
 
-        // 🔥 Mettre en ligne à la connexion
+        // Mettre en ligne
         await User.updateOne(
           { email: user.email },
           { $set: { online: true } }
@@ -27,7 +27,7 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user._id.toString(),
           email: user.email,
-          name: user.username,
+          username: user.username,   // 🔥 IMPORTANT
           avatar: user.avatar || "",
         };
       },
@@ -40,12 +40,18 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.avatar = user.avatar;
+      if (user) {
+        token.username = user.username; // 🔥 IMPORTANT
+        token.avatar = user.avatar;
+      }
       return token;
     },
 
     async session({ session, token }) {
-      if (session.user) session.user.avatar = token.avatar as string;
+      if (session.user) {
+        session.user.username = token.username as string; // 🔥 IMPORTANT
+        session.user.avatar = token.avatar as string;
+      }
       return session;
     },
   },
@@ -53,6 +59,8 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
+
+  secret: process.env.NEXTAUTH_SECRET, // 🔥 OBLIGATOIRE SUR VERCEL
 };
 
 const handler = NextAuth(authOptions);

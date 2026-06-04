@@ -27,14 +27,14 @@ export default function AddFriend() {
   };
 
   const addFriend = async (friendUsername: string) => {
-    if (!session?.user?.name) return;
+    if (!session?.user?.username) return;
 
     await fetch("/api/friends/request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: session.user.name,     // pseudo de l'utilisateur connecté
-        to: friendUsername,          // pseudo de l'ami
+        from: session.user.username,   // 🔥 CORRIGÉ
+        to: friendUsername,            // 🔥 CORRIGÉ
       }),
     });
 
@@ -57,10 +57,10 @@ export default function AddFriend() {
           {results.map((u) => (
             <div
               key={u.email}
-              onClick={() => addFriend(u.username)}
+              onClick={() => addFriend(u.username)}   // 🔥 CORRIGÉ
               className="p-2 bg-gray-700 rounded cursor-pointer hover:bg-gray-600"
             >
-              {u.username}
+              {u.username}                            // 🔥 CORRIGÉ
             </div>
           ))}
         </div>
