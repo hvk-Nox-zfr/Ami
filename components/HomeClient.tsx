@@ -8,18 +8,11 @@ import dynamic from "next/dynamic";
 
 const Call = dynamic(() => import("@/components/Call"), { ssr: false });
 
-import Chat from "@/components/Chat";
-import GroupChat from "@/components/GroupChat";
-import CreateGroup from "@/components/CreateGroup";
-
 export default function HomeClient() {
   const { data: session } = useSession();
-
-  // 🔥 CORRIGÉ : on utilise username, pas name
   const username = session?.user?.username as string;
 
   const router = useRouter();
-
   const [socket, setSocket] = useState<any>(null);
 
   const [amis, setAmis] = useState<any[]>([]);
@@ -70,9 +63,10 @@ export default function HomeClient() {
       setIncomingCall(from);
     });
 
+    // ⭐ Correction ici
     s.on("call-accepted", ({ from }) => {
       setIncomingCall(null);
-      setCallUser({ id: from, role: "callee" });
+      setCallUser({ id: from, role: "caller" });
     });
 
     s.on("call-declined", ({ from }) => {
@@ -111,6 +105,7 @@ export default function HomeClient() {
   return (
     <main className="h-screen w-full bg-black text-white flex flex-col">
 
+      {/* ÉCRAN D’APPEL */}
       {callUser && (
         <Call
           selfId={username}
@@ -120,16 +115,30 @@ export default function HomeClient() {
         />
       )}
 
+      {/* POPUP D’APPEL ENTRANT */}
       {incomingCall && (
-        <div className="fixed bottom-5 right-5 bg-gray-900 p-4 rounded-xl shadow-xl z-50 border border-yellow-400">
-          <p className="font-semibold">{incomingCall} t’appelle 📞</p>
-          <div className="flex gap-3 mt-3">
-            <button onClick={acceptCall} className="bg-green-600 px-3 py-1 rounded-lg">Accepter</button>
-            <button onClick={rejectCall} className="bg-red-600 px-3 py-1 rounded-lg">Refuser</button>
+        <div className="fixed bottom-5 right-5 bg-gray-900 p-5 rounded-2xl shadow-2xl z-50 border border-yellow-400 animate-pulse">
+          <p className="font-semibold text-lg">{incomingCall} t’appelle 📞</p>
+
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={acceptCall}
+              className="px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 transition shadow-lg shadow-green-500/30"
+            >
+              ✅ Accepter
+            </button>
+
+            <button
+              onClick={rejectCall}
+              className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 transition shadow-lg shadow-red-500/30"
+            >
+              ❌ Refuser
+            </button>
           </div>
         </div>
       )}
 
+      {/* LISTE D’AMIS */}
       <section className="flex-1 overflow-y-auto p-4">
         <h2 className="text-2xl font-bold mb-4 text-yellow-300">Amis</h2>
 
@@ -168,17 +177,19 @@ export default function HomeClient() {
                   </div>
                 </div>
 
+                {/* BOUTON D’APPEL FUTURISTE */}
                 <button
                   onClick={() => startCall(friend.username)}
-                  className="bg-green-600 px-3 py-1 rounded-lg hover:bg-green-700"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 transition shadow-lg shadow-green-500/40 text-black font-bold"
                 >
-                  📞
+                  📞 Appeler
                 </button>
               </div>
             ))}
         </div>
       </section>
 
+      {/* BARRE DE RECHERCHE */}
       <div className="w-full bg-gray-900 p-3 flex items-center gap-3 border-t border-gray-800">
         <input
           value={search}
