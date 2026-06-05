@@ -6,3 +6,59 @@
   --lk-text-color: white;
   --lk-border-radius: 14px;
 }
+
+.call-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* BARRE EN BAS */
+.call-controls {
+  position: absolute;
+  bottom: 40px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+/* BOUTONS */
+.call-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.2s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.call-btn:hover {
+  transform: scale(1.1);
+}
+
+/* ÉTATS */
+.btn-on {
+  background: rgba(0, 255, 120, 0.2);
+  border-color: rgba(0, 255, 120, 0.5);
+}
+
+.btn-off {
+  background: rgba(255, 0, 0, 0.2);
+  border-color: rgba(255, 0, 0, 0.5);
+}
+
+/* BOUTON ROUGE */
+.hang {
+  background: rgba(255, 0, 0, 0.8) !important;
+  border-color: rgba(255, 0, 0, 1) !important;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}

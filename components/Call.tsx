@@ -1,8 +1,7 @@
 "use client";
 
-import "@/styles/livekit.css"; // ton fichier custom
-
-import { useEffect, useMemo, useState } from "react";
+import "@/styles/livekit.css";
+import { useEffect, useState } from "react";
 import { LiveKitRoom, useRoomContext } from "@livekit/components-react";
 
 type CallProps = {
@@ -12,36 +11,42 @@ type CallProps = {
   onClose: () => void;
 };
 
-// Bouton micro compatible LiveKit 0.12.1
+// --- ICONES SVG MODERNES ---
+const MicOn = () => <svg width="28" height="28" fill="white"><path d="M14 18a4 4 0 0 0 4-4V6a4 4 0 1 0-8 0v8a4 4 0 0 0 4 4zm6-4a6 6 0 0 1-12 0H6a8 8 0 0 0 16 0h-2zM12 22h4v2h-4v-2z"/></svg>;
+const MicOff = () => <svg width="28" height="28" fill="white"><path d="M19 11a5 5 0 0 1-8.9 3.1l1.5-1.5A3 3 0 0 0 17 11V6a3 3 0 0 0-6 0v1.2l-2 2V6a5 5 0 0 1 10 0v5zM4 20l14-14 1.4 1.4L5.4 21.4 4 20z"/></svg>;
+
+const CamOn = () => <svg width="28" height="28" fill="white"><path d="M17 10l5-3v14l-5-3v2H3V8h14v2z"/></svg>;
+const CamOff = () => <svg width="28" height="28" fill="white"><path d="M3 6h12v2l5-3v14l-5-3v2H3V6zm0 14l14-14 1.4 1.4L4.4 21.4 3 20z"/></svg>;
+
+const Hang = () => <svg width="32" height="32" fill="white"><path d="M4 18c4-4 8-6 12-6s8 2 12 6l-3 3c-3-3-6-4-9-4s-6 1-9 4l-3-3z"/></svg>;
+
+// --- BOUTONS ---
 function MicButton() {
   const room = useRoomContext();
   const local = room?.localParticipant;
-
   const enabled = local?.isMicrophoneEnabled ?? false;
 
   return (
     <button
       onClick={() => local?.setMicrophoneEnabled(!enabled)}
-      className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md text-white"
+      className={`call-btn ${enabled ? "btn-on" : "btn-off"}`}
     >
-      {enabled ? "🎤" : "🔇"}
+      {enabled ? <MicOn /> : <MicOff />}
     </button>
   );
 }
 
-// Bouton caméra compatible LiveKit 0.12.1
 function CamButton() {
   const room = useRoomContext();
   const local = room?.localParticipant;
-
   const enabled = local?.isCameraEnabled ?? false;
 
   return (
     <button
       onClick={() => local?.setCameraEnabled(!enabled)}
-      className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md text-white"
+      className={`call-btn ${enabled ? "btn-on" : "btn-off"}`}
     >
-      {enabled ? "📷" : "🚫"}
+      {enabled ? <CamOn /> : <CamOff />}
     </button>
   );
 }
@@ -49,96 +54,49 @@ function CamButton() {
 export default function Call({ selfId, peerId, onClose }: CallProps) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL!;
-
-  const roomName = useMemo(() => {
-    const ids = [selfId, peerId].sort();
-    return `room-${ids[0]}-${ids[1]}`;
-  }, [selfId, peerId]);
+  const roomName = `room-${[selfId, peerId].sort().join("-")}`;
 
   useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const res = await fetch(
-          `/api/livekit-token?room=${encodeURIComponent(roomName)}&identity=${encodeURIComponent(selfId)}`
-        );
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Erreur token LiveKit");
-        }
-
-        const data = await res.json();
-        setToken(data.token);
-      } catch (e: any) {
-        setError(e.message || "Impossible de récupérer le token");
-      } finally {
-        setLoading(false);
-      }
+    const load = async () => {
+      const res = await fetch(`/api/livekit-token?room=${roomName}&identity=${selfId}`);
+      const data = await res.json();
+      setToken(data.token);
+      setLoading(false);
     };
-
-    fetchToken();
+    load();
   }, [roomName, selfId]);
 
-  if (loading) {
+  if (loading || !token) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-white z-[9999]">
-        <p className="mb-2 text-lg">Connexion à l’appel…</p>
-        <p className="text-sm text-gray-400">Préparation de la salle vidéo</p>
-      </div>
-    );
-  }
-
-  if (error || !token) {
-    return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-white z-[9999]">
-        <p className="mb-2 text-red-400">Erreur d’appel</p>
-        <p className="text-sm text-gray-400 mb-4">{error || "Impossible d’obtenir le token LiveKit"}</p>
-        <button
-          onClick={onClose}
-          className="px-4 py-2 bg-white/10 rounded-full text-sm hover:bg-white/20"
-        >
-          Fermer
-        </button>
+      <div className="call-screen">
+        <p className="text-lg">Connexion à l’appel…</p>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black z-[9999]">
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 z-[10000] bg-red-600 px-5 py-2 rounded-full text-white text-sm shadow-xl hover:bg-red-700 transition"
-      >
-        Raccrocher
-      </button>
-
+    <div className="call-screen">
       <LiveKitRoom
         serverUrl={serverUrl}
         token={token}
-        onDisconnected={onClose}
         connect={true}
-        data-lk-theme="default"
-        className="w-full h-full flex items-center justify-center"
+        onDisconnected={onClose}
+        className="w-full h-full"
       >
-        <div className="text-white text-center space-y-6">
-          <p className="text-lg">Appel en cours…</p>
+        {/* TEXTE */}
+        <div className="absolute top-10 w-full text-center text-white text-xl opacity-80">
+          Appel en cours…
+        </div>
 
-          <div className="flex gap-6 justify-center">
-            <MicButton />
-            <button
-              onClick={onClose}
-              className="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center"
-            >
-              ⛔
-            </button>
-            <CamButton />
-          </div>
+        {/* BARRE D’ACTIONS EN BAS */}
+        <div className="call-controls">
+          <MicButton />
+          <button onClick={onClose} className="call-btn hang">
+            <Hang />
+          </button>
+          <CamButton />
         </div>
       </LiveKitRoom>
     </div>
