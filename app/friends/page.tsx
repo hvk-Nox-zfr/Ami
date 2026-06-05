@@ -28,13 +28,19 @@ export default function FriendsPage() {
         return;
       }
 
-      const res = await fetch("app/api/users/search?query=" + search);
+      const res = await fetch("/api/users/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: search }),
+      });
+
       const data = await res.json();
-      setResults(data.results || []);
+      setResults(data.users || []);
     };
 
-    searchUser();
-  }, [search]);
+  searchUser();
+}, [search]);
+
 
   return (
     <div className="fixed inset-0 bg-black text-white flex flex-col">
