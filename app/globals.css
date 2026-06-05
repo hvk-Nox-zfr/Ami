@@ -204,3 +204,84 @@ body {
 * {
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
+
+/* --- SIDEBAR BUTTONS (PC ONLY) --- */
+.nav-btn {
+  width: 55px;
+  height: 55px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.25s ease;
+}
+
+.nav-btn:hover {
+  transform: scale(1.12);
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 0 14px rgba(255,255,255,0.15);
+}
+
+/* --- FRIEND CARD --- */
+.friend-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 14px;
+  transition: 0.25s ease;
+}
+
+.friend-card:hover {
+  background: rgba(255,255,255,0.12);
+  transform: translateX(4px);
+}
+
+/* --- CALL BUTTON --- */
+.call-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #00ff88, #00cc66);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.25s ease;
+  box-shadow: 0 0 12px rgba(0,255,150,0.4);
+}
+
+.call-btn:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 18px rgba(0,255,150,0.7);
+}
+
+/* --- POPUP D’APPEL ENTRANT --- */
+.incoming-call-popup {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(20,20,20,0.9);
+  border: 1px solid rgba(255,255,0,0.4);
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 0 20px rgba(255,255,0,0.2);
+  animation: popupFade 0.3s ease;
+}
+
+@keyframes popupFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- MOBILE POPUP --- */
+@media (max-width: 768px) {
+  .incoming-call-popup {
+    width: 90%;
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+  }
+}
