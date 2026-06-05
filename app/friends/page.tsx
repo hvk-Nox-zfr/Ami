@@ -9,7 +9,7 @@ export default function FriendsPage() {
   const [pendingSent, setPendingSent] = useState<string[]>([]);
   const [results, setResults] = useState<any[]>([]);
 
-  // Charger les demandes d'amis
+  // 🔥 Auto-refresh des demandes d'amis
   useEffect(() => {
     const load = async () => {
       const res = await fetch("/api/friends/list");
@@ -18,7 +18,12 @@ export default function FriendsPage() {
       setPendingReceived(data.pendingReceived || []);
       setPendingSent(data.pendingSent || []);
     };
-    load();
+
+    load(); // première exécution
+
+    const interval = setInterval(load, 2000); // recharge toutes les 2 secondes
+
+    return () => clearInterval(interval);
   }, []);
 
   // Recherche d'utilisateur
