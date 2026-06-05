@@ -84,12 +84,25 @@ export default function HomeClient() {
   return (
     <main className="h-screen w-full bg-black text-white flex">
 
-      {/* --- SIDEBAR --- */}
-      <aside className="hidden md:flex flex-col w-20 bg-gray-950 border-r border-gray-800 p-4 gap-6">
-        <button className="text-3xl hover:scale-110 transition">🏠</button>
-        <button className="text-3xl hover:scale-110 transition">👥</button>
-        <button className="text-3xl hover:scale-110 transition">💬</button>
-        <button className="text-3xl hover:scale-110 transition">⚙️</button>
+      {/* --- SIDEBAR FUTURISTE --- */}
+      <aside className="hidden md:flex flex-col w-20 bg-[#0a0a0a] border-r border-gray-800 p-4 gap-8 items-center">
+
+        <button className="nav-btn">
+          <svg width="26" height="26" fill="white"><path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2v-9z"/></svg>
+        </button>
+
+        <button className="nav-btn">
+          <svg width="26" height="26" fill="white"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>
+        </button>
+
+        <button className="nav-btn">
+          <svg width="26" height="26" fill="white"><path d="M4 4h20v4H4zm0 8h20v4H4zm0 8h20v4H4z"/></svg>
+        </button>
+
+        <button className="nav-btn">
+          <svg width="26" height="26" fill="white"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>
+        </button>
+
       </aside>
 
       {/* --- LISTE D’AMIS --- */}
@@ -109,7 +122,7 @@ export default function HomeClient() {
             .map((friend) => (
               <div
                 key={friend._id}
-                className="flex items-center justify-between p-3 bg-gray-800 rounded-xl hover:bg-gray-700 transition"
+                className="friend-card"
               >
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -134,16 +147,18 @@ export default function HomeClient() {
 
                 <button
                   onClick={() => startCall(friend.username)}
-                  className="px-3 py-1 rounded-lg bg-green-600 hover:bg-green-700 transition"
+                  className="call-btn"
                 >
-                  📞
+                  <svg width="22" height="22" fill="white">
+                    <path d="M6 2l4 2-2 4c1 2 3 4 5 5l4-2 2 4c-1 1-3 2-5 2-6 0-12-6-12-12 0-2 1-4 2-5z"/>
+                  </svg>
                 </button>
               </div>
             ))}
         </div>
       </section>
 
-      {/* --- ZONE PRINCIPALE (chat / appel / vide) --- */}
+      {/* --- ZONE PRINCIPALE --- */}
       <section className="flex-1 bg-gray-950 flex items-center justify-center text-gray-500">
         <p>Sélectionne un ami pour discuter ou appeler</p>
       </section>
@@ -160,23 +175,12 @@ export default function HomeClient() {
 
       {/* --- POPUP D’APPEL ENTRANT --- */}
       {incomingCall && (
-        <div className="fixed bottom-5 right-5 bg-gray-900 p-5 rounded-2xl shadow-2xl z-50 border border-yellow-400 animate-pulse">
+        <div className="incoming-call-popup">
           <p className="font-semibold text-lg">{incomingCall} t’appelle 📞</p>
 
           <div className="flex gap-4 mt-4">
-            <button
-              onClick={acceptCall}
-              className="px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 transition shadow-lg shadow-green-500/30"
-            >
-              Accepter
-            </button>
-
-            <button
-              onClick={rejectCall}
-              className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 transition shadow-lg shadow-red-500/30"
-            >
-              Refuser
-            </button>
+            <button onClick={acceptCall} className="popup-btn accept">Accepter</button>
+            <button onClick={rejectCall} className="popup-btn decline">Refuser</button>
           </div>
         </div>
       )}
