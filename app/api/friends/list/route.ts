@@ -11,27 +11,37 @@ export async function GET() {
   const session = (await getServerSession(authOptions)) as Session | null;
 
   if (!session?.user?.email) {
-    return NextResponse.json({ friends: [] });
+    return NextResponse.json({
+      pendingReceived: [],
+      pendingSent: [],
+      friends: [],
+    });
   }
 
   const me = await User.findOne({ email: session.user.email }).lean();
 
   if (!me) {
-    return NextResponse.json({ friends: [] });
+    return NextResponse.json({
+      pendingReceived: [],
+      pendingSent: [],
+      friends: [],
+    });
   }
 
-  // 🔥 ON AJOUTE online ICI
-  const friends = await User.find(
+  // 🔥 Récupérer les infos des amis
+  const friendsData = await User.find(
     { email: { $in: me.friends } },
-    { username: 1, avatar: 1, online: 1 } // <--- IMPORTANT
+    { username: 1, avatar: 1, online: 1 }
   ).lean();
 
   return NextResponse.json({
-    friends: friends.map((f) => ({
+    pendingReceived: me.pendingReceived || [],
+    pendingSent: me.pendingSent || [],
+    friends: friendsData.map((f) => ({
       _id: f._id.toString(),
       username: f.username,
       avatar: f.avatar || "",
-      online: f.online ?? false, // <--- ON RENVOIE LE STATUT
+      online: f.online ?? false,
     })),
   });
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import type { Session } from "next-auth"; // ✔ important
+import type { Session } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import connect from "@/lib/mongodb";
 import User from "@/models/User";
@@ -8,57 +8,50 @@ import User from "@/models/User";
 export async function POST(req: Request) {
   await connect();
 
-  const session = (await getServerSession(authOptions)) as Session; // ✔ cast propre
+  const session = (await getServerSession(authOptions)) as Session;
 
-  if (!session || !session.user?.email) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
   const { friendUsername } = await req.json();
 
   if (!friendUsername) {
-    return NextResponse.json(
-      { error: "friendUsername manquant" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "friendUsername manquant" }, { status: 400 });
   }
 
-  // ✔ utilisateur connecté
   const me = await User.findOne({ email: session.user.email });
-
-  if (!me) {
-    return NextResponse.json(
-      { error: "Utilisateur introuvable" },
-      { status: 404 }
-    );
-  }
-
-  // ✔ trouver l’ami par pseudo
   const friend = await User.findOne({ username: friendUsername });
 
-  if (!friend) {
-    return NextResponse.json(
-      { error: "Pseudo introuvable" },
-      { status: 404 }
-    );
+  if (!me || !friend) {
+    return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
   }
 
-  if (friend.email === me.email) {
-    return NextResponse.json(
-      { error: "Tu ne peux pas t'ajouter toi-même" },
-      { status: 400 }
-    );
+  if (me.email === friend.email) {
+    return NextResponse.json({ error: "Tu ne peux pas t'ajouter toi-même" }, { status: 400 });
   }
 
+  // Déjà amis ?
   if (me.friends.includes(friend.email)) {
-    return NextResponse.json(
-      { error: "Déjà amis" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Déjà amis" }, { status: 400 });
   }
 
-  me.friends.push(friend.email);
+  // Déjà une demande envoyée ?
+  if (me.pendingSent.includes(friend.email)) {
+    return NextResponse.json({ error: "Demande déjà envoyée" }, { status: 400 });
+  }
+
+  // Déjà une demande reçue ?
+  if (me.pendingReceived.includes(friend.email)) {
+    return NextResponse.json({ error: "Cette personne t’a déjà envoyé une demande" }, { status: 400 });
+  }
+
+  // 🔥 ENVOI DE LA DEMANDE
+  me.pendingSent.push(friend.email);
+  friend.pendingReceived.push(me.email);
+
   await me.save();
+  await friend.save();
 
   return NextResponse.json({ success: true });
 }
