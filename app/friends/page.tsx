@@ -14,6 +14,7 @@ export default function FriendsPage() {
     const load = async () => {
       const res = await fetch("/api/friends/list");
       const data = await res.json();
+
       setPendingReceived(data.pendingReceived || []);
       setPendingSent(data.pendingSent || []);
     };
@@ -38,9 +39,8 @@ export default function FriendsPage() {
       setResults(data.users || []);
     };
 
-  searchUser();
-}, [search]);
-
+    searchUser();
+  }, [search]);
 
   return (
     <div className="fixed inset-0 bg-black text-white flex flex-col">
@@ -94,8 +94,10 @@ export default function FriendsPage() {
                       onClick={async () => {
                         await fetch("/api/friends/add", {
                           method: "POST",
-                          body: JSON.stringify({ to: user.username }),
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ friendUsername: user.username }),
                         });
+
                         alert("Demande envoyée !");
                       }}
                       className="px-4 py-2 bg-blue-600 rounded-full text-sm"
@@ -132,8 +134,10 @@ export default function FriendsPage() {
                     onClick={async () => {
                       await fetch("/api/friends/accept", {
                         method: "POST",
+                        headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ from: user }),
                       });
+
                       setPendingReceived((prev) =>
                         prev.filter((u) => u !== user)
                       );
@@ -147,8 +151,10 @@ export default function FriendsPage() {
                     onClick={async () => {
                       await fetch("/api/friends/decline", {
                         method: "POST",
+                        headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ from: user }),
                       });
+
                       setPendingReceived((prev) =>
                         prev.filter((u) => u !== user)
                       );

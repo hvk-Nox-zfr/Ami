@@ -27,28 +27,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
   }
 
-  if (me.email === friend.email) {
+  if (me.username === friend.username) {
     return NextResponse.json({ error: "Tu ne peux pas t'ajouter toi-même" }, { status: 400 });
   }
 
   // Déjà amis ?
-  if (me.friends.includes(friend.email)) {
+  if (me.friends.includes(friend.username)) {
     return NextResponse.json({ error: "Déjà amis" }, { status: 400 });
   }
 
   // Déjà une demande envoyée ?
-  if (me.pendingSent.includes(friend.email)) {
+  if (me.pendingSent.includes(friend.username)) {
     return NextResponse.json({ error: "Demande déjà envoyée" }, { status: 400 });
   }
 
   // Déjà une demande reçue ?
-  if (me.pendingReceived.includes(friend.email)) {
+  if (me.pendingReceived.includes(friend.username)) {
     return NextResponse.json({ error: "Cette personne t’a déjà envoyé une demande" }, { status: 400 });
   }
 
-  // 🔥 ENVOI DE LA DEMANDE
-  me.pendingSent.push(friend.email);
-  friend.pendingReceived.push(me.email);
+  // 🔥 ENVOI DE LA DEMANDE (par username)
+  me.pendingSent.push(friend.username);
+  friend.pendingReceived.push(me.username);
 
   await me.save();
   await friend.save();
