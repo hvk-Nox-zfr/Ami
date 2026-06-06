@@ -1,15 +1,14 @@
+/* -------------------------------------------------- */
+/*                 TAILWIND IMPORT                    */
+/* -------------------------------------------------- */
 @import "tailwindcss";
 
+/* -------------------------------------------------- */
+/*                 THEME VARIABLES                    */
+/* -------------------------------------------------- */
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -25,8 +24,86 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* --- Boutons néon futuristes --- */
+/* -------------------------------------------------- */
+/*                 GLOBAL TRANSITIONS                 */
+/* -------------------------------------------------- */
+* {
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
 
+/* -------------------------------------------------- */
+/*                 SIDEBAR BUTTONS                    */
+/* -------------------------------------------------- */
+.nav-btn {
+  width: 55px;
+  height: 55px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(6px);
+  transition: 0.25s ease;
+}
+
+.nav-btn:hover {
+  transform: scale(1.12) translateY(-2px);
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 0 14px rgba(255,255,255,0.15);
+}
+
+/* -------------------------------------------------- */
+/*                 FRIEND CARD                        */
+/* -------------------------------------------------- */
+.friend-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 14px;
+  border: 1px solid transparent;
+  transition: 0.25s ease;
+}
+
+.friend-card:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.15);
+  transform: translateX(6px);
+  box-shadow: 0 0 14px rgba(255,255,255,0.08);
+}
+
+/* -------------------------------------------------- */
+/*                 CALL BUTTON                        */
+/* -------------------------------------------------- */
+.call-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #00ff88, #00cc66);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 14px rgba(0,255,150,0.4);
+  transition: 0.25s ease;
+  animation: callPulse 2s infinite ease-in-out;
+}
+
+.call-btn:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 22px rgba(0,255,150,0.7);
+}
+
+@keyframes callPulse {
+  0% { box-shadow: 0 0 10px rgba(0,255,150,0.3); }
+  50% { box-shadow: 0 0 20px rgba(0,255,150,0.6); }
+  100% { box-shadow: 0 0 10px rgba(0,255,150,0.3); }
+}
+
+/* -------------------------------------------------- */
+/*                 NEON BUTTONS                       */
+/* -------------------------------------------------- */
 .neon-btn {
   background: rgba(20, 20, 20, 0.7);
   border: 2px solid #00eaff;
@@ -37,22 +114,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: 0.2s ease;
+  transition: 0.25s ease;
   box-shadow: 0 0 10px #00eaff55;
   backdrop-filter: blur(6px);
 }
 
-.neon-btn svg {
-  width: 26px;
-  height: 26px;
-}
-
 .neon-btn:hover {
-  box-shadow: 0 0 20px #00eaffaa;
   transform: scale(1.1);
+  box-shadow: 0 0 20px #00eaffaa;
 }
-
-/* --- Variantes de couleurs --- */
 
 .neon-btn.red {
   border-color: #ff0055;
@@ -72,8 +142,9 @@ body {
   box-shadow: 0 0 20px #00ff88aa;
 }
 
-/* --- Conteneur des boutons --- */
-
+/* -------------------------------------------------- */
+/*                 CALL CONTROLS BAR                  */
+/* -------------------------------------------------- */
 .call-controls {
   background: rgba(0, 0, 0, 0.45);
   padding: 14px 22px;
@@ -81,96 +152,35 @@ body {
   display: flex;
   gap: 18px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* --- Animation apparition --- */
-
-.call-controls {
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 0 25px rgba(0,0,0,0.4);
   animation: fadeUp 0.3s ease forwards;
 }
 
 @keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- SIDEBAR BUTTONS --- */
-.nav-btn {
-  width: 55px;
-  height: 55px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: 0.25s ease;
-}
-
-.nav-btn:hover {
-  transform: scale(1.12);
-  background: rgba(255,255,255,0.12);
-  box-shadow: 0 0 14px rgba(255,255,255,0.15);
-}
-
-/* --- FRIEND CARD --- */
-.friend-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 14px;
-  transition: 0.25s ease;
-}
-
-.friend-card:hover {
-  background: rgba(255,255,255,0.12);
-  transform: translateX(4px);
-}
-
-/* --- CALL BUTTON --- */
-.call-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #00ff88, #00cc66);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: 0.25s ease;
-  box-shadow: 0 0 12px rgba(0,255,150,0.4);
-}
-
-.call-btn:hover {
-  transform: scale(1.12);
-  box-shadow: 0 0 18px rgba(0,255,150,0.7);
-}
-
-/* --- POPUP D’APPEL ENTRANT --- */
+/* -------------------------------------------------- */
+/*                 INCOMING CALL POPUP                */
+/* -------------------------------------------------- */
 .incoming-call-popup {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: rgba(20,20,20,0.9);
+  background: rgba(20,20,20,0.85);
   border: 1px solid rgba(255,255,0,0.4);
   padding: 20px;
   border-radius: 18px;
-  box-shadow: 0 0 20px rgba(255,255,0,0.2);
-  animation: popupFade 0.3s ease;
+  box-shadow: 0 0 20px rgba(255,255,0,0.25);
+  backdrop-filter: blur(12px);
+  animation: popupFade 0.35s ease;
 }
 
 @keyframes popupFade {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .popup-btn {
@@ -200,88 +210,22 @@ body {
   transform: scale(1.08);
 }
 
-/* --- SMOOTH GLOBAL ANIMATIONS --- */
-* {
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-
-/* --- SIDEBAR BUTTONS (PC ONLY) --- */
-.nav-btn {
-  width: 55px;
-  height: 55px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: 0.25s ease;
-}
-
-.nav-btn:hover {
-  transform: scale(1.12);
-  background: rgba(255,255,255,0.12);
-  box-shadow: 0 0 14px rgba(255,255,255,0.15);
-}
-
-/* --- FRIEND CARD --- */
-.friend-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 14px;
-  transition: 0.25s ease;
-}
-
-.friend-card:hover {
-  background: rgba(255,255,255,0.12);
-  transform: translateX(4px);
-}
-
-/* --- CALL BUTTON --- */
-.call-btn {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #00ff88, #00cc66);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: 0.25s ease;
-  box-shadow: 0 0 12px rgba(0,255,150,0.4);
-}
-
-.call-btn:hover {
-  transform: scale(1.12);
-  box-shadow: 0 0 18px rgba(0,255,150,0.7);
-}
-
-/* --- POPUP D’APPEL ENTRANT --- */
-.incoming-call-popup {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(20,20,20,0.9);
-  border: 1px solid rgba(255,255,0,0.4);
-  padding: 20px;
-  border-radius: 18px;
-  box-shadow: 0 0 20px rgba(255,255,0,0.2);
-  animation: popupFade 0.3s ease;
-}
-
-@keyframes popupFade {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- MOBILE POPUP --- */
+/* -------------------------------------------------- */
+/*                 MOBILE RESPONSIVE                  */
+/* -------------------------------------------------- */
 @media (max-width: 768px) {
   .incoming-call-popup {
     width: 90%;
     left: 50%;
     transform: translateX(-50%);
     right: auto;
+  }
+
+  .friend-card {
+    padding: 18px;
+  }
+
+  .call-btn {
+    transform: scale(1.15);
   }
 }
