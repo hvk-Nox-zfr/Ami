@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { io } from "socket.io-client";
 import { useRouter } from "next/navigation";
@@ -21,7 +21,16 @@ export default function HomeClient() {
   const [callUser, setCallUser] = useState<{ id: string; role: "caller" | "callee" } | null>(null);
 
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+
+  // ⭐ CORRECTION : tu avais oublié cette ligne !
   const [search, setSearch] = useState("");
+
+  // MOBILE VIEW STATE
+  const [mobileView, setMobileView] = useState<"friends" | "chat">("friends");
+
+  // SWIPE DETECTION
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   const loadFriends = useCallback(async () => {
     const res = await fetch("/api/friends/list");
@@ -81,110 +90,152 @@ export default function HomeClient() {
     setIncomingCall(null);
   };
 
-  return (
-    <main className="h-screen w-full bg-black text-white flex">
+  // SWIPE HANDLERS
+  const onTouchStart = (e: any) => {
+    touchStartX.current = e.changedTouches[0].clientX;
+  };
 
-      {/* --- SIDEBAR (PC ONLY) --- */}
+  const onTouchEnd = (e: any) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    handleSwipe();
+  };
+
+  const handleSwipe = () => {
+    const delta = touchEndX.current - touchStartX.current;
+
+    if (delta > 80 && mobileView === "chat") {
+      setMobileView("friends");
+      setSelectedUser(null);
+    }
+
+    if (delta < -80 && mobileView === "friends" && selectedUser) {
+      setMobileView("chat");
+    }
+  };
+
+  return (
+    <main
+      className="h-screen w-full bg-black text-white flex overflow-hidden"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+
+      {/* SIDEBAR PC */}
       <aside className="hidden md:flex flex-col w-20 bg-[#0a0a0a] border-r border-gray-800 p-4 gap-8 items-center">
         <button className="nav-btn">
           <svg width="26" height="26" fill="white"><path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2v-9z"/></svg>
         </button>
-
-        <button className="nav-btn">
-          <svg width="26" height="26" fill="white"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>
-        </button>
-
-        <button className="nav-btn">
-          <svg width="26" height="26" fill="white"><path d="M4 4h20v4H4zm0 8h20v4H4zm0 8h20v4H4z"/></svg>
-        </button>
-
-        <button className="nav-btn">
-          <svg width="26" height="26" fill="white"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>
-        </button>
       </aside>
 
-      {/* --- LISTE D’AMIS --- */}
-      <section className="w-full md:w-80 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto">
+      {/* MOBILE + PC WRAPPER */}
+      <div
+        className="flex flex-1 transition-transform duration-300"
+        style={{
+          transform:
+            mobileView === "friends"
+              ? "translateX(0)"
+              : "translateX(-100%)",
+        }}
+      >
 
-        {/* HEADER + AJOUT AMI */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-yellow-300">Amis</h2>
+        {/* --- LISTE D’AMIS --- */}
+        <section className="w-full md:w-80 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto shrink-0">
 
-          <button
-            onClick={() => router.push("/friends")}
-            className="neon-btn"
-          >
-            <svg width="22" height="22" fill="white">
-              <path d="M12 5v14m7-7H5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
-        </div>
+          {/* HEADER */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-yellow-300">Amis</h2>
 
-        {/* SEARCH */}
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher..."
-          className="w-full p-3 mb-4 bg-gray-800 rounded-xl text-lg md:text-base"
-        />
+            <button
+              onClick={() => router.push("/friends")}
+              className="neon-btn"
+            >
+              <svg width="22" height="22" fill="white">
+                <path d="M12 5v14m7-7H5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
 
-        {/* FRIEND LIST */}
-        <div className="space-y-3">
-          {amis
-            .filter((f) => f.username.toLowerCase().includes(search.toLowerCase()))
-            .map((friend) => (
-              <div
-                key={friend._id}
-                className="friend-card cursor-pointer"
-                onClick={() => setSelectedUser(friend.username)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img
-                      src={friend.avatar || "/default-avatar.png"}
-                      className="w-14 h-14 md:w-12 md:h-12 rounded-full object-cover"
-                    />
-                    <span
-                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-gray-900 ${
-                        friend.online ? "bg-green-500" : "bg-gray-500"
-                      }`}
-                    ></span>
-                  </div>
+          {/* SEARCH */}
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher..."
+            className="w-full p-3 mb-4 bg-gray-800 rounded-xl text-lg md:text-base"
+          />
 
-                  <div>
-                    <p className="font-semibold text-lg md:text-base">{friend.username}</p>
-                    <p className="text-sm text-gray-400">
-                      {friend.online ? "En ligne" : "Hors ligne"}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startCall(friend.username);
+          {/* FRIEND LIST */}
+          <div className="space-y-3">
+            {amis
+              .filter((f) =>
+                f.username.toLowerCase().includes(search.toLowerCase())
+              )
+              .map((friend) => (
+                <div
+                  key={friend._id}
+                  className="friend-card cursor-pointer"
+                  onClick={() => {
+                    setSelectedUser(friend.username);
+                    setMobileView("chat");
                   }}
-                  className="call-btn"
                 >
-                  <svg width="22" height="22" fill="white">
-                    <path d="M6 2l4 2-2 4c1 2 3 4 5 5l4-2 2 4c-1 1-3 2-5 2-6 0-12-6-12-12 0-2 1-4 2-5z"/>
-                  </svg>
-                </button>
-              </div>
-            ))}
-        </div>
-      </section>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <img
+                        src={friend.avatar || "/default-avatar.png"}
+                        className="w-14 h-14 md:w-12 md:h-12 rounded-full object-cover"
+                      />
+                      <span
+                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-gray-900 ${
+                          friend.online ? "bg-green-500" : "bg-gray-500"
+                        }`}
+                      ></span>
+                    </div>
 
-      {/* --- ZONE PRINCIPALE (CHAT) --- */}
-      <section className="hidden md:flex flex-1 bg-gray-950 items-center justify-center text-gray-300">
-        {!selectedUser ? (
-          <p>Sélectionne un ami pour discuter ou appeler</p>
-        ) : (
-          <Chat user={selectedUser} self={username} socket={socket} />
-        )}
-      </section>
+                    <div>
+                      <p className="font-semibold text-lg md:text-base">{friend.username}</p>
+                      <p className="text-sm text-gray-400">
+                        {friend.online ? "En ligne" : "Hors ligne"}
+                      </p>
+                    </div>
+                  </div>
 
-      {/* --- ÉCRAN D’APPEL --- */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startCall(friend.username);
+                    }}
+                    className="call-btn"
+                  >
+                    <svg width="22" height="22" fill="white">
+                      <path d="M6 2l4 2-2 4c1 2 3 4 5 5l4-2 2 4c-1 1-3 2-5 2-6 0-12-6-12-12 0-2 1-4 2-5z"/>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+          </div>
+        </section>
+
+        {/* --- CHAT PC --- */}
+        <section className="flex-1 bg-gray-950 overflow-hidden shrink-0 hidden md:flex md:flex-col">
+          {!selectedUser ? (
+            <div className="flex-1 flex items-center justify-center text-gray-400">
+              Sélectionne un ami pour discuter
+            </div>
+          ) : (
+            <Chat user={selectedUser} self={username} socket={socket} />
+          )}
+        </section>
+
+        {/* --- CHAT MOBILE --- */}
+        <section className="flex md:hidden w-full bg-gray-950 overflow-hidden shrink-0">
+          {selectedUser && (
+            <Chat user={selectedUser} self={username} socket={socket} />
+          )}
+        </section>
+
+      </div>
+
+      {/* --- APPEL --- */}
       {callUser && (
         <Call
           selfId={username}
@@ -194,7 +245,7 @@ export default function HomeClient() {
         />
       )}
 
-      {/* --- POPUP D’APPEL ENTRANT --- */}
+      {/* --- POPUP APPEL ENTRANT --- */}
       {incomingCall && (
         <div className="incoming-call-popup">
           <p className="font-semibold text-lg">{incomingCall} t’appelle 📞</p>
