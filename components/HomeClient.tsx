@@ -172,11 +172,13 @@ export default function HomeClient() {
                   key={friend._id}
                   className="friend-card cursor-pointer"
                   onClick={() => {
-                    setSelectedUser(friend.username);
-                    // 🔥 Toujours ouvrir la vue chat (le panneau mobile est md:hidden sur PC)
-                    setMobileView("chat");
-                  }}
-                >
+                    setSelectedUser(null); // reset obligatoire
+                    setTimeout(() => {
+                      setSelectedUser(friend.username);
+                      setMobileView("chat");
+                  }, 0);
+                }}
+              >
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <img
