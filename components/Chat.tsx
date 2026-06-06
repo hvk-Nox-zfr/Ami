@@ -12,37 +12,37 @@ export default function Chat({ user, self, socket }: ChatProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
 
-useEffect(() => {
-  if (!socket) return;
-  if (!user || typeof user !== "string" || user.trim() === "") return;
+  useEffect(() => {
+    if (!socket) return;
+    if (!user || typeof user !== "string" || user.trim() === "") return;
 
-  const safeUser = user.trim();
+    const safeUser = user.trim();
 
-  // Appel correct : POST + JSON body
-  fetch("/api/messages/get", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ otherUser: safeUser }),
-  })
-    .then((res) => res.json())
-    .then((data) => setMessages(data.messages || []))
-    .catch(() => {});
+    // Charger l'historique
+    fetch("/api/messages/get", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ otherUser: safeUser }),
+    })
+      .then((res) => res.json())
+      .then((data) => setMessages(data.messages || []))
+      .catch(() => {});
 
-  const handler = (msg: any) => {
-    if (msg.from === user || msg.to === user) {
-      setMessages((prev) => [...prev, msg]);
-    }
-  };
+    // Réception temps réel
+    const handler = (msg: any) => {
+      if (msg.from === user || msg.to === user) {
+        setMessages((prev) => [...prev, msg]);
+      }
+    };
 
-  socket.on("new-message", handler);
+    socket.on("new-message", handler);
 
-  return () => {
-    socket.off("new-message", handler);
-  };
-}, [socket, user]);
-
+    return () => {
+      socket.off("new-message", handler);
+    };
+  }, [socket, user]);
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -88,6 +88,9 @@ useEffect(() => {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") sendMessage();
+          }}
           placeholder="Écrire un message..."
           className="flex-1 p-3 bg-gray-800 rounded-xl"
         />
