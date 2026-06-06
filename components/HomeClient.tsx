@@ -23,14 +23,21 @@ export default function HomeClient() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  // MOBILE VIEW STATE (uniquement utilisé sur mobile)
+  // ⭐ Détection mobile fiable
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMobileDevice(window.innerWidth < 768);
+    }
+  }, []);
+
+  // MOBILE VIEW STATE
   const [mobileView, setMobileView] = useState<"friends" | "chat">("friends");
 
-  // SWIPE DETECTION (mobile only)
+  // SWIPE DETECTION
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
-
-  const isMobile = () => typeof window !== "undefined" && window.innerWidth < 768;
 
   const loadFriends = useCallback(async () => {
     const res = await fetch("/api/friends/list");
@@ -90,20 +97,20 @@ export default function HomeClient() {
     setIncomingCall(null);
   };
 
-  // SWIPE HANDLERS (mobile only)
+  // ⭐ SWIPE HANDLERS (mobile only)
   const onTouchStart = (e: any) => {
-    if (!isMobile()) return;
+    if (!isMobileDevice) return;
     touchStartX.current = e.changedTouches[0].clientX;
   };
 
   const onTouchEnd = (e: any) => {
-    if (!isMobile()) return;
+    if (!isMobileDevice) return;
     touchEndX.current = e.changedTouches[0].clientX;
     handleSwipe();
   };
 
   const handleSwipe = () => {
-    if (!isMobile()) return;
+    if (!isMobileDevice) return;
 
     const delta = touchEndX.current - touchStartX.current;
 
@@ -134,15 +141,14 @@ export default function HomeClient() {
 
       {/* WRAPPER */}
       <div className="flex flex-1">
+
         {/* --- LISTE D’AMIS --- */}
         <section className="w-full md:w-80 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto shrink-0">
+
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-yellow-300">Amis</h2>
 
-            <button
-              onClick={() => router.push("/friends")}
-              className="neon-btn"
-            >
+            <button onClick={() => router.push("/friends")} className="neon-btn">
               <svg width="22" height="22" fill="white">
                 <path d="M12 5v14m7-7H5" stroke="white" strokeWidth="2" strokeLinecap="round" />
               </svg>
@@ -167,7 +173,7 @@ export default function HomeClient() {
                   className="friend-card cursor-pointer"
                   onClick={() => {
                     setSelectedUser(friend.username);
-                    if (isMobile()) setMobileView("chat");
+                    if (isMobileDevice) setMobileView("chat");
                   }}
                 >
                   <div className="flex items-center gap-3">
@@ -218,8 +224,8 @@ export default function HomeClient() {
           )}
         </section>
 
-        {/* --- CHAT MOBILE (FULL SCREEN, contrôlé par mobileView) --- */}
-        {isMobile() && (
+        {/* --- CHAT MOBILE (FULL SCREEN) --- */}
+        {isMobileDevice && (
           <section
             className="flex md:hidden w-full bg-gray-950 overflow-hidden shrink-0 transition-transform duration-300"
             style={{
