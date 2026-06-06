@@ -1,21 +1,11 @@
-/* -------------------------------------------------- */
-/*                 TAILWIND IMPORT                    */
-/* -------------------------------------------------- */
 @import "tailwindcss";
 
 /* -------------------------------------------------- */
 /*                 THEME VARIABLES                    */
 /* -------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
@@ -122,44 +112,6 @@ body {
 .neon-btn:hover {
   transform: scale(1.1);
   box-shadow: 0 0 20px #00eaffaa;
-}
-
-.neon-btn.red {
-  border-color: #ff0055;
-  box-shadow: 0 0 10px #ff005555;
-}
-
-.neon-btn.red:hover {
-  box-shadow: 0 0 20px #ff0055aa;
-}
-
-.neon-btn.green {
-  border-color: #00ff88;
-  box-shadow: 0 0 10px #00ff8855;
-}
-
-.neon-btn.green:hover {
-  box-shadow: 0 0 20px #00ff88aa;
-}
-
-/* -------------------------------------------------- */
-/*                 CALL CONTROLS BAR                  */
-/* -------------------------------------------------- */
-.call-controls {
-  background: rgba(0, 0, 0, 0.45);
-  padding: 14px 22px;
-  border-radius: 40px;
-  display: flex;
-  gap: 18px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 0 25px rgba(0,0,0,0.4);
-  animation: fadeUp 0.3s ease forwards;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 /* -------------------------------------------------- */
