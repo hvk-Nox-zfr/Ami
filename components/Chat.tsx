@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 
 type ChatProps = {
-  user: string;        // ← le nom de l’ami sélectionné
-  self: string;        // ← ton propre username
-  socket: any;         // ← socket.io
+  user: string;
+  self: string;
+  socket: any;
 };
 
 export default function Chat({ user, self, socket }: ChatProps) {
@@ -15,20 +15,28 @@ export default function Chat({ user, self, socket }: ChatProps) {
   useEffect(() => {
     if (!socket) return;
 
-    // Charger les messages existants
-    fetch(`/api/messages/${user}`)
-      .then((res) => res.json())
-      .then((data) => setMessages(data.messages || []));
+    // ❗ Empêche les crashs Safari / URLs invalides
+    if (!user || typeof user !== "string" || user.trim() === "") return;
 
-    // Écouter les nouveaux messages
-    socket.on("new-message", (msg: any) => {
+    const safeUser = encodeURIComponent(user);
+
+    // Charger les messages existants
+    fetch(`/api/messages/${safeUser}`)
+      .then((res) => res.json())
+      .then((data) => setMessages(data.messages || []))
+      .catch(() => {});
+
+    // Listener propre
+    const handler = (msg: any) => {
       if (msg.from === user || msg.to === user) {
         setMessages((prev) => [...prev, msg]);
       }
-    });
+    };
+
+    socket.on("new-message", handler);
 
     return () => {
-      socket.off("new-message");
+      socket.off("new-message", handler);
     };
   }, [socket, user]);
 
