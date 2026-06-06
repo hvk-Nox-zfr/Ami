@@ -21,16 +21,16 @@ export default function HomeClient() {
   const [callUser, setCallUser] = useState<{ id: string; role: "caller" | "callee" } | null>(null);
 
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-
-  // ⭐ CORRECTION : tu avais oublié cette ligne !
   const [search, setSearch] = useState("");
 
-  // MOBILE VIEW STATE
+  // MOBILE VIEW STATE (uniquement utilisé sur mobile)
   const [mobileView, setMobileView] = useState<"friends" | "chat">("friends");
 
-  // SWIPE DETECTION
+  // SWIPE DETECTION (mobile only)
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+
+  const isMobile = () => typeof window !== "undefined" && window.innerWidth < 768;
 
   const loadFriends = useCallback(async () => {
     const res = await fetch("/api/friends/list");
@@ -90,17 +90,21 @@ export default function HomeClient() {
     setIncomingCall(null);
   };
 
-  // SWIPE HANDLERS
+  // SWIPE HANDLERS (mobile only)
   const onTouchStart = (e: any) => {
+    if (!isMobile()) return;
     touchStartX.current = e.changedTouches[0].clientX;
   };
 
   const onTouchEnd = (e: any) => {
+    if (!isMobile()) return;
     touchEndX.current = e.changedTouches[0].clientX;
     handleSwipe();
   };
 
   const handleSwipe = () => {
+    if (!isMobile()) return;
+
     const delta = touchEndX.current - touchStartX.current;
 
     if (delta > 80 && mobileView === "chat") {
@@ -119,29 +123,19 @@ export default function HomeClient() {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-
       {/* SIDEBAR PC */}
       <aside className="hidden md:flex flex-col w-20 bg-[#0a0a0a] border-r border-gray-800 p-4 gap-8 items-center">
         <button className="nav-btn">
-          <svg width="26" height="26" fill="white"><path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2v-9z"/></svg>
+          <svg width="26" height="26" fill="white">
+            <path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2v-9z" />
+          </svg>
         </button>
       </aside>
 
-      {/* MOBILE + PC WRAPPER */}
-      <div
-        className="flex flex-1 transition-transform duration-300"
-        style={{
-          transform:
-            mobileView === "friends"
-              ? "translateX(0)"
-              : "translateX(-100%)",
-        }}
-      >
-
+      {/* WRAPPER */}
+      <div className="flex flex-1">
         {/* --- LISTE D’AMIS --- */}
         <section className="w-full md:w-80 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto shrink-0">
-
-          {/* HEADER */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-yellow-300">Amis</h2>
 
@@ -150,12 +144,11 @@ export default function HomeClient() {
               className="neon-btn"
             >
               <svg width="22" height="22" fill="white">
-                <path d="M12 5v14m7-7H5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M12 5v14m7-7H5" stroke="white" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
           </div>
 
-          {/* SEARCH */}
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -163,7 +156,6 @@ export default function HomeClient() {
             className="w-full p-3 mb-4 bg-gray-800 rounded-xl text-lg md:text-base"
           />
 
-          {/* FRIEND LIST */}
           <div className="space-y-3">
             {amis
               .filter((f) =>
@@ -175,7 +167,7 @@ export default function HomeClient() {
                   className="friend-card cursor-pointer"
                   onClick={() => {
                     setSelectedUser(friend.username);
-                    setMobileView("chat");
+                    if (isMobile()) setMobileView("chat");
                   }}
                 >
                   <div className="flex items-center gap-3">
@@ -207,7 +199,7 @@ export default function HomeClient() {
                     className="call-btn"
                   >
                     <svg width="22" height="22" fill="white">
-                      <path d="M6 2l4 2-2 4c1 2 3 4 5 5l4-2 2 4c-1 1-3 2-5 2-6 0-12-6-12-12 0-2 1-4 2-5z"/>
+                      <path d="M6 2l4 2-2 4c1 2 3 4 5 5l4-2 2 4c-1 1-3 2-5 2-6 0-12-6-12-12 0-2 1-4 2-5z" />
                     </svg>
                   </button>
                 </div>
@@ -226,13 +218,22 @@ export default function HomeClient() {
           )}
         </section>
 
-        {/* --- CHAT MOBILE --- */}
-        <section className="flex md:hidden w-full bg-gray-950 overflow-hidden shrink-0">
-          {selectedUser && (
-            <Chat user={selectedUser} self={username} socket={socket} />
-          )}
-        </section>
-
+        {/* --- CHAT MOBILE (FULL SCREEN, contrôlé par mobileView) --- */}
+        {isMobile() && (
+          <section
+            className="flex md:hidden w-full bg-gray-950 overflow-hidden shrink-0 transition-transform duration-300"
+            style={{
+              transform:
+                mobileView === "friends"
+                  ? "translateX(100%)"
+                  : "translateX(0)",
+            }}
+          >
+            {selectedUser && (
+              <Chat user={selectedUser} self={username} socket={socket} />
+            )}
+          </section>
+        )}
       </div>
 
       {/* --- APPEL --- */}
@@ -251,8 +252,12 @@ export default function HomeClient() {
           <p className="font-semibold text-lg">{incomingCall} t’appelle 📞</p>
 
           <div className="flex gap-4 mt-4">
-            <button onClick={acceptCall} className="popup-btn accept">Accepter</button>
-            <button onClick={rejectCall} className="popup-btn decline">Refuser</button>
+            <button onClick={acceptCall} className="popup-btn accept">
+              Accepter
+            </button>
+            <button onClick={rejectCall} className="popup-btn decline">
+              Refuser
+            </button>
           </div>
         </div>
       )}
