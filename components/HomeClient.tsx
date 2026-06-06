@@ -28,17 +28,46 @@ export default function HomeClient() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsMobileDevice(window.innerWidth < 768);
+      const check = () => setIsMobileDevice(window.innerWidth < 768);
+      check();
+      window.addEventListener("resize", check);
+      return () => window.removeEventListener("resize", check);
     }
   }, []);
 
-  // MOBILE VIEW STATE
+  // ⭐ Mobile view state
   const [mobileView, setMobileView] = useState<"friends" | "chat">("friends");
 
-  // SWIPE DETECTION
+  // ⭐ Swipe detection
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
+  const onTouchStart = (e: any) => {
+    if (!isMobileDevice) return;
+    touchStartX.current = e.changedTouches[0].clientX;
+  };
+
+  const onTouchEnd = (e: any) => {
+    if (!isMobileDevice) return;
+    touchEndX.current = e.changedTouches[0].clientX;
+    handleSwipe();
+  };
+
+  const handleSwipe = () => {
+    if (!isMobileDevice) return;
+
+    const delta = touchEndX.current - touchStartX.current;
+
+    if (delta > 80 && mobileView === "chat") {
+      setMobileView("friends");
+    }
+
+    if (delta < -80 && mobileView === "friends" && selectedUser) {
+      setMobileView("chat");
+    }
+  };
+
+  // ⭐ Load friends
   const loadFriends = useCallback(async () => {
     const res = await fetch("/api/friends/list");
     const data = await res.json();
@@ -78,6 +107,7 @@ export default function HomeClient() {
     };
   }, [username, loadFriends]);
 
+  // ⭐ APPELS — placés AVANT le rendu JSX pour éviter le rouge
   const startCall = (friend: string) => {
     if (!socket || !username) return;
     socket.emit("call-user", { from: username, to: friend });
@@ -97,33 +127,6 @@ export default function HomeClient() {
     setIncomingCall(null);
   };
 
-  // ⭐ SWIPE HANDLERS (mobile only)
-  const onTouchStart = (e: any) => {
-    if (!isMobileDevice) return;
-    touchStartX.current = e.changedTouches[0].clientX;
-  };
-
-  const onTouchEnd = (e: any) => {
-    if (!isMobileDevice) return;
-    touchEndX.current = e.changedTouches[0].clientX;
-    handleSwipe();
-  };
-
-  const handleSwipe = () => {
-    if (!isMobileDevice) return;
-
-    const delta = touchEndX.current - touchStartX.current;
-
-    if (delta > 80 && mobileView === "chat") {
-      setMobileView("friends");
-      setSelectedUser(null);
-    }
-
-    if (delta < -80 && mobileView === "friends" && selectedUser) {
-      setMobileView("chat");
-    }
-  };
-
   return (
     <main
       className="h-screen w-full bg-black text-white flex overflow-hidden"
@@ -140,11 +143,10 @@ export default function HomeClient() {
       </aside>
 
       {/* WRAPPER */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 relative">
 
         {/* --- LISTE D’AMIS --- */}
-        <section className="w-full md:w-80 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto shrink-0">
-
+        <section className="w-full md:w-80 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto shrink-0 z-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-yellow-300">Amis</h2>
 
@@ -164,9 +166,7 @@ export default function HomeClient() {
 
           <div className="space-y-3">
             {amis
-              .filter((f) =>
-                f.username.toLowerCase().includes(search.toLowerCase())
-              )
+              .filter((f) => f.username.toLowerCase().includes(search.toLowerCase()))
               .map((friend) => (
                 <div
                   key={friend._id}
@@ -214,7 +214,7 @@ export default function HomeClient() {
         </section>
 
         {/* --- CHAT PC --- */}
-        <section className="flex-1 bg-gray-950 overflow-hidden shrink-0 hidden md:flex md:flex-col">
+        <section className="hidden md:flex flex-1 bg-gray-950 overflow-hidden">
           {!selectedUser ? (
             <div className="flex-1 flex items-center justify-center text-gray-400">
               Sélectionne un ami pour discuter
@@ -224,22 +224,20 @@ export default function HomeClient() {
           )}
         </section>
 
-        {/* --- CHAT MOBILE (FULL SCREEN) --- */}
-        {isMobileDevice && (
-          <section
-            className="flex md:hidden w-full bg-gray-950 overflow-hidden shrink-0 transition-transform duration-300"
-            style={{
-              transform:
-                mobileView === "friends"
-                  ? "translateX(100%)"
-                  : "translateX(0)",
-            }}
-          >
-            {selectedUser && (
-              <Chat user={selectedUser} self={username} socket={socket} />
-            )}
-          </section>
-        )}
+        {/* --- CHAT MOBILE (toujours rendu) --- */}
+        <section
+          className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300"
+          style={{
+            transform:
+              mobileView === "friends"
+                ? "translateX(100%)"
+                : "translateX(0)",
+          }}
+        >
+          {selectedUser && (
+            <Chat user={selectedUser} self={username} socket={socket} />
+          )}
+        </section>
       </div>
 
       {/* --- APPEL --- */}
