@@ -23,7 +23,7 @@ export default function HomeClient() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  // ⭐ Détection mobile FIABLE
+  // Détection mobile (utile pour le swipe, mais plus critique pour l’ouverture du chat)
   const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   useEffect(() => {
@@ -35,10 +35,10 @@ export default function HomeClient() {
     }
   }, []);
 
-  // ⭐ Mobile view state
+  // Vue mobile
   const [mobileView, setMobileView] = useState<"friends" | "chat">("friends");
 
-  // ⭐ Swipe detection
+  // Swipe
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
@@ -67,7 +67,7 @@ export default function HomeClient() {
     }
   };
 
-  // ⭐ Load friends
+  // Load friends
   const loadFriends = useCallback(async () => {
     const res = await fetch("/api/friends/list");
     const data = await res.json();
@@ -107,7 +107,7 @@ export default function HomeClient() {
     };
   }, [username, loadFriends]);
 
-  // ⭐ APPELS — placés AVANT le rendu JSX pour éviter le rouge
+  // Appels
   const startCall = (friend: string) => {
     if (!socket || !username) return;
     socket.emit("call-user", { from: username, to: friend });
@@ -145,7 +145,7 @@ export default function HomeClient() {
       {/* WRAPPER */}
       <div className="flex flex-1 relative">
 
-        {/* --- LISTE D’AMIS --- */}
+        {/* LISTE D’AMIS */}
         <section className="w-full md:w-80 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto shrink-0 z-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-yellow-300">Amis</h2>
@@ -173,7 +173,8 @@ export default function HomeClient() {
                   className="friend-card cursor-pointer"
                   onClick={() => {
                     setSelectedUser(friend.username);
-                    if (isMobileDevice) setMobileView("chat");
+                    // 🔥 Toujours ouvrir la vue chat (le panneau mobile est md:hidden sur PC)
+                    setMobileView("chat");
                   }}
                 >
                   <div className="flex items-center gap-3">
@@ -213,7 +214,7 @@ export default function HomeClient() {
           </div>
         </section>
 
-        {/* --- CHAT PC --- */}
+        {/* CHAT PC */}
         <section className="hidden md:flex flex-1 bg-gray-950 overflow-hidden">
           {!selectedUser ? (
             <div className="flex-1 flex items-center justify-center text-gray-400">
@@ -224,25 +225,24 @@ export default function HomeClient() {
           )}
         </section>
 
-        {/* --- CHAT MOBILE (toujours rendu) --- */}
-          <section
-            className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300"
-            style={{
+        {/* CHAT MOBILE */}
+        <section
+          className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300"
+          style={{
             transform:
-            mobileView === "friends"
-              ? "translateX(100%)"
-              : "translateX(0)",
-            pointerEvents: mobileView === "friends" ? "none" : "auto"
+              mobileView === "friends"
+                ? "translateX(100%)"
+                : "translateX(0)",
+            pointerEvents: mobileView === "friends" ? "none" : "auto",
           }}
         >
-
           {selectedUser && (
             <Chat user={selectedUser} self={username} socket={socket} />
           )}
         </section>
       </div>
 
-      {/* --- APPEL --- */}
+      {/* APPEL */}
       {callUser && (
         <Call
           selfId={username}
@@ -252,7 +252,7 @@ export default function HomeClient() {
         />
       )}
 
-      {/* --- POPUP APPEL ENTRANT --- */}
+      {/* POPUP APPEL ENTRANT */}
       {incomingCall && (
         <div className="incoming-call-popup">
           <p className="font-semibold text-lg">{incomingCall} t’appelle 📞</p>
