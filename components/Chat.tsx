@@ -21,7 +21,7 @@ export default function Chat({ user, self, socket }: ChatProps) {
     const safeUser = encodeURIComponent(user);
 
     // Charger les messages existants
-    fetch(`/api/messages/${safeUser}`)
+    fetch(`/api/messages/get?user=${encodeURIComponent(user)}`)
       .then((res) => res.json())
       .then((data) => setMessages(data.messages || []))
       .catch(() => {});
