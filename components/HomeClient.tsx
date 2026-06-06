@@ -225,15 +225,17 @@ export default function HomeClient() {
         </section>
 
         {/* --- CHAT MOBILE (toujours rendu) --- */}
-        <section
-          className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300"
-          style={{
+          <section
+            className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300"
+            style={{
             transform:
-              mobileView === "friends"
-                ? "translateX(100%)"
-                : "translateX(0)",
+            mobileView === "friends"
+              ? "translateX(100%)"
+              : "translateX(0)",
+            pointerEvents: mobileView === "friends" ? "none" : "auto"
           }}
         >
+
           {selectedUser && (
             <Chat user={selectedUser} self={username} socket={socket} />
           )}
