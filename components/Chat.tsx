@@ -12,33 +12,37 @@ export default function Chat({ user, self, socket }: ChatProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
 
-  useEffect(() => {
-    if (!socket) return;
+useEffect(() => {
+  if (!socket) return;
+  if (!user || typeof user !== "string" || user.trim() === "") return;
 
-    // ❗ Empêche les crashs Safari / URLs invalides
-    if (!user || typeof user !== "string" || user.trim() === "") return;
+  const safeUser = user.trim();
 
-    const safeUser = encodeURIComponent(user);
+  // Appel correct : POST + JSON body
+  fetch("/api/messages/get", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ otherUser: safeUser }),
+  })
+    .then((res) => res.json())
+    .then((data) => setMessages(data.messages || []))
+    .catch(() => {});
 
-    // Charger les messages existants
-    fetch(`/api/messages/get?user=${encodeURIComponent(user)}`)
-      .then((res) => res.json())
-      .then((data) => setMessages(data.messages || []))
-      .catch(() => {});
+  const handler = (msg: any) => {
+    if (msg.from === user || msg.to === user) {
+      setMessages((prev) => [...prev, msg]);
+    }
+  };
 
-    // Listener propre
-    const handler = (msg: any) => {
-      if (msg.from === user || msg.to === user) {
-        setMessages((prev) => [...prev, msg]);
-      }
-    };
+  socket.on("new-message", handler);
 
-    socket.on("new-message", handler);
+  return () => {
+    socket.off("new-message", handler);
+  };
+}, [socket, user]);
 
-    return () => {
-      socket.off("new-message", handler);
-    };
-  }, [socket, user]);
 
   const sendMessage = () => {
     if (!input.trim()) return;
