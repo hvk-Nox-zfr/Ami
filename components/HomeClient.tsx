@@ -23,7 +23,7 @@ export default function HomeClient() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  // ⭐ Détection mobile fiable
+  // ⭐ Détection mobile FIABLE
   const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   useEffect(() => {
