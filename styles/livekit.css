@@ -1,12 +1,16 @@
+/* ============================
+   🎨 THEME GLOBAL
+============================ */
 :root[data-lk-theme="default"] {
-  --lk-bg: #000000;
-  --lk-control-bar-bg: rgba(0,0,0,0.4);
-  --lk-control-hover-bg: rgba(255,255,255,0.2);
-  --lk-control-active-bg: #ff4444;
+  --lk-bg: #000;
   --lk-text-color: white;
-  --lk-border-radius: 14px;
+  --lk-border-radius: 16px;
+  --lk-transition: 0.25s ease;
 }
 
+/* ============================
+   🖥️ ÉCRAN D’APPEL
+============================ */
 .call-screen {
   position: fixed;
   inset: 0;
@@ -15,9 +19,78 @@
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  overflow: hidden;
 }
 
-/* BARRE EN BAS */
+/* ============================
+   🎥 VIDÉO
+============================ */
+.call-video-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: black;
+  overflow: hidden;
+}
+
+/* REMOTE VIDEO */
+.remote-video {
+  position: absolute;
+  inset: 0;
+  animation: fadeIn 0.4s ease;
+}
+
+.remote-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* LOCAL VIDEO */
+.local-video {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 180px;
+  height: 120px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  transition: var(--lk-transition);
+  animation: popIn 0.35s ease;
+}
+
+.local-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 📱 MOBILE MODE (Snapchat style) */
+@media (max-width: 768px) {
+  .local-video {
+    width: 100%;
+    height: 100%;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+    opacity: 0.85;
+    box-shadow: none;
+  }
+
+  .remote-video {
+    width: 160px;
+    height: 220px;
+    top: 20px;
+    right: 20px;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+}
+
+/* ============================
+   🎛️ BARRE DE CONTRÔLES
+============================ */
 .call-controls {
   position: absolute;
   bottom: 40px;
@@ -25,40 +98,99 @@
   display: flex;
   justify-content: center;
   gap: 40px;
+  z-index: 20;
 }
 
-/* BOUTONS */
+/* ============================
+   🔘 BOUTONS
+============================ */
 .call-btn {
-  width: 70px;
-  height: 70px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.08);
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: 0.2s ease;
+  transition: var(--lk-transition);
   cursor: pointer;
   border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Hover */
 .call-btn:hover {
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
 
-/* ÉTATS */
+/* ============================
+   🎤 MICRO / 🎥 CAMÉRA
+============================ */
+
+/* ON */
 .btn-on {
-  background: rgba(0, 255, 120, 0.2);
-  border-color: rgba(0, 255, 120, 0.5);
+  background: rgba(0, 255, 120, 0.25);
+  border-color: rgba(0, 255, 120, 0.6);
+  box-shadow: 0 0 15px rgba(0,255,120,0.4);
 }
 
+/* OFF */
 .btn-off {
-  background: rgba(255, 0, 0, 0.2);
-  border-color: rgba(255, 0, 0, 0.5);
+  background: rgba(255, 0, 0, 0.25);
+  border-color: rgba(255, 0, 0, 0.6);
+  animation: shake 0.25s ease;
 }
 
-/* BOUTON ROUGE */
+/* Icône barrée animée */
+.call-btn.btn-off::after {
+  content: "";
+  position: absolute;
+  width: 70%;
+  height: 3px;
+  background: red;
+  transform: rotate(-45deg) translateY(0);
+  border-radius: 2px;
+  animation: slash 0.25s ease forwards;
+}
+
+/* ============================
+   📞 BOUTON ROUGE (Raccrocher)
+============================ */
 .hang {
-  background: rgba(255, 0, 0, 0.8) !important;
+  background: rgba(255, 0, 0, 0.85) !important;
   border-color: rgba(255, 0, 0, 1) !important;
-  box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.6);
+}
+
+.hang:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 35px rgba(255, 0, 0, 0.8);
+}
+
+/* ============================
+   🎬 ANIMATIONS
+============================ */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes slash {
+  0% { transform: rotate(-45deg) translateY(20px); opacity: 0; }
+  100% { transform: rotate(-45deg) translateY(0); opacity: 1; }
 }
