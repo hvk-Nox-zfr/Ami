@@ -1,22 +1,37 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import mongoose from "mongoose";
 import Message from "./models/Message.js";
 
 const PORT = process.env.PORT || 3001;
 
-// EXPRESS POUR RENDER
+// ----------------------
+// 🔗 CONNEXION MONGODB
+// ----------------------
+mongoose.connect(process.env.MONGODB_URI, {
+  serverSelectionTimeoutMS: 5000,
+})
+.then(() => console.log("📦 MongoDB connecté"))
+.catch(err => console.error("❌ Erreur MongoDB :", err));
+
+// ----------------------
+// 🚀 EXPRESS POUR RENDER
+// ----------------------
 const app = express();
 
-// Route pour empêcher Render de mettre le serveur en veille
 app.get("/", (req, res) => {
   res.send("Socket.io server is running");
 });
 
-// SERVEUR HTTP
+// ----------------------
+// 🔥 SERVEUR HTTP
+// ----------------------
 const server = http.createServer(app);
 
-// SOCKET.IO CONFIGURÉ EN WEBSOCKET PUR
+// ----------------------
+// 🔥 SOCKET.IO
+// ----------------------
 const io = new Server(server, {
   cors: { origin: "*" },
   transports: ["websocket"],
@@ -33,6 +48,7 @@ io.on("connection", (socket) => {
   socket.on("setup", (username) => {
     users[username] = socket.id;
     socket.join(username);
+    console.log("👤 Utilisateur connecté :", username);
   });
 
   socket.on("user-online", (username) => {
@@ -71,6 +87,9 @@ io.on("connection", (socket) => {
     if (users[to]) io.to(users[to]).emit("hangup", { from });
   });
 
+  // ----------------------
+  // 💬 MESSAGES
+  // ----------------------
   socket.on("send-message", async (msg) => {
     const { from, to, text, time } = msg;
 
@@ -101,6 +120,9 @@ io.on("connection", (socket) => {
   });
 });
 
+// ----------------------
+// 🚀 LANCEMENT SERVEUR
+// ----------------------
 server.listen(PORT, () => {
   console.log("🚀 Socket.io en ligne sur le port " + PORT);
 });
