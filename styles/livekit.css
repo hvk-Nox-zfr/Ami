@@ -34,7 +34,6 @@
 }
 
 /* REMOTE = plein écran */
-/* REMOTE = plein écran */
 .remote-video {
   position: absolute;
   inset: 0;
@@ -42,7 +41,7 @@
   overflow: hidden;
 }
 
-/* LOCAL = petit carré en bas à droite */
+/* LOCAL = petite bulle en bas à droite */
 .local-video {
   position: absolute;
   bottom: 20px;
@@ -53,9 +52,10 @@
   overflow: hidden;
   z-index: 2;
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  transition: 0.25s ease;
 }
 
-/* MOBILE : même logique que FaceTime */
+/* 📱 MOBILE : même logique que FaceTime */
 @media (max-width: 768px) {
   .local-video {
     width: 120px;

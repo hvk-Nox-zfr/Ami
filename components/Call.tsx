@@ -81,7 +81,7 @@ function CamButton() {
 
 // --- LAYOUT VIDÉO ---
 function VideoLayout() {
-  // ❗ IMPORTANT : plus de placeholder fantôme
+  // ❗ IMPORTANT : pas de placeholders → plus de 3 participants fantômes
   const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: false }]);
 
   const remote = tracks.find(t => !t.participant.isLocal);
@@ -95,7 +95,7 @@ function VideoLayout() {
         {remote && <ParticipantTile trackRef={remote} />}
       </div>
 
-      {/* LOCAL = petit carré en bas à droite */}
+      {/* LOCAL = petite bulle en bas à droite */}
       {local && (
         <div className="local-video">
           <ParticipantTile trackRef={local} />
