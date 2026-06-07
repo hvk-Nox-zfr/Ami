@@ -196,21 +196,26 @@
 }
 
 /* 🔥 Corrige LiveKit pour centrer parfaitement les vidéos */
-.lk-participant-tile,
+/* 🔥 Corrige LiveKit pour centrer parfaitement les vidéos */
+.lk-participant-tile {
+  position: absolute !important;
+  inset: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
 .lk-video-container,
 .lk-video {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
   background: black !important;
 }
 
-/* Supprime les marges internes LiveKit */
-.lk-participant-tile {
-  display: block !important;
-  align-items: stretch !important;
-  justify-content: stretch !important;
+/* Empêche LiveKit de forcer un ratio */
+.lk-participant-tile > * {
+  flex: none !important;
 }
