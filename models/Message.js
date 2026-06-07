@@ -1,10 +1,10 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 
-const MessageSchema = new Schema(
+const MessageSchema = new mongoose.Schema(
   {
     sender: { type: String, required: true },
     receiver: { type: String, required: true },
-    text: { type: String, required: true }, // ← corrigé
+    text: { type: String, required: true },
   },
   { timestamps: true }
 );
