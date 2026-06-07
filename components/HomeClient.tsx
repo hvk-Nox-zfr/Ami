@@ -77,7 +77,13 @@ export default function HomeClient() {
   useEffect(() => {
     if (!username) return;
 
-    const s = io("https://ami-msec.onrender.com", { transports: ["websocket"] });
+    const s = io("wss://ami-msec.onrender.com", {
+      transports: ["websocket"],
+      secure: true,
+      reconnection: true,
+      rejectUnauthorized: false,
+    });
+
     setSocket(s);
 
     s.emit("setup", username);
