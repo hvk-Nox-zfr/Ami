@@ -44,20 +44,20 @@ export default function Chat({ user, self, socket }: ChatProps) {
     };
   }, [socket, user]);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+const sendMessage = () => {
+  if (!input.trim()) return;
 
-    const msg = {
-      from: self,
-      to: user,
-      text: input,
-      time: Date.now(),
-    };
-
-    socket.emit("send-message", msg);
-    setMessages((prev) => [...prev, msg]);
-    setInput("");
+  const msg = {
+    from: self,
+    to: user,
+    text: input,
+    time: Date.now(),
   };
+
+  socket.emit("send-message", msg);
+  setInput("");
+};
+
 
   return (
     <div className="w-full h-full flex flex-col bg-[#0a0a0a]">
