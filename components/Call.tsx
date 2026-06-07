@@ -2,7 +2,15 @@
 
 import "@/styles/livekit.css";
 import { useEffect, useState } from "react";
-import { LiveKitRoom, useRoomContext, VideoConference } from "@livekit/components-react";
+import {
+  LiveKitRoom,
+  useRoomContext,
+  ParticipantTile,
+  GridLayout,
+  useTracks,
+  TrackReferenceOrPlaceholder,
+} from "@livekit/components-react";
+import { Track } from "livekit-client";
 
 type CallProps = {
   selfId: string;
@@ -11,7 +19,7 @@ type CallProps = {
   onClose: () => void;
 };
 
-// --- ICONES SVG MODERNES ---
+// --- ICONES SVG ---
 const MicOn = () => <svg width="28" height="28" fill="white"><path d="M14 18a4 4 0 0 0 4-4V6a4 4 0 1 0-8 0v8a4 4 0 0 0 4 4zm6-4a6 6 0 0 1-12 0H6a8 8 0 0 0 16 0h-2zM12 22h4v2h-4v-2z"/></svg>;
 const MicOff = () => <svg width="28" height="28" fill="white"><path d="M19 11a5 5 0 0 1-8.9 3.1l1.5-1.5A3 3 0 0 0 17 11V6a3 3 0 0 0-6 0v1.2l-2 2V6a5 5 0 0 1 10 0v5zM4 20l14-14 1.4 1.4L5.4 21.4 4 20z"/></svg>;
 
@@ -51,6 +59,41 @@ function CamButton() {
   );
 }
 
+// --- LAYOUT CUSTOM ---
+function VideoLayout() {
+  const tracks = useTracks([
+    { source: Track.Source.Camera, withPlaceholder: true },
+    { source: Track.Source.Microphone, withPlaceholder: true },
+  ]);
+
+  const remoteTracks = tracks.filter((t) => !t.participant.isLocal);
+  const localTracks = tracks.filter((t) => t.participant.isLocal);
+
+  return (
+    <div className="relative w-full h-full">
+      {/* REMOTE VIDEO EN GRAND */}
+      <div className="absolute inset-0 bg-black">
+        {remoteTracks.length > 0 ? (
+          <ParticipantTile trackRef={remoteTracks[0]} />
+        ) : (
+          <div className="flex items-center justify-center h-full text-white opacity-50">
+            En attente de l’autre participant…
+          </div>
+        )}
+      </div>
+
+      {/* LOCAL VIDEO EN PETIT (PC) / EN GRAND (MOBILE) */}
+      <div className="absolute bottom-4 right-4 w-40 h-56 rounded-lg overflow-hidden shadow-lg
+                      md:w-48 md:h-72
+                      mobile:inset-0 mobile:w-full mobile:h-full mobile:rounded-none mobile:shadow-none mobile:opacity-80">
+        {localTracks.length > 0 && (
+          <ParticipantTile trackRef={localTracks[0]} />
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Call({ selfId, peerId, onClose }: CallProps) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,15 +128,14 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
         onDisconnected={onClose}
         className="w-full h-full"
       >
-        {/* INTERFACE VIDÉO LIVEKIT */}
-        <VideoConference />
+        <VideoLayout />
 
         {/* TEXTE */}
         <div className="absolute top-10 w-full text-center text-white text-xl opacity-80">
           Appel en cours…
         </div>
 
-        {/* BARRE D’ACTIONS EN BAS */}
+        {/* BARRE D’ACTIONS */}
         <div className="call-controls">
           <MicButton />
           <button onClick={onClose} className="call-btn hang">
