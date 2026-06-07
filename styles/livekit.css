@@ -23,7 +23,7 @@
 }
 
 /* ============================
-   🎥 VIDÉO
+   🎥 VIDÉO — LAYOUT
 ============================ */
 .call-video-container {
   position: relative;
@@ -33,14 +33,15 @@
   overflow: hidden;
 }
 
-/* REMOTE VIDEO = plein écran */
+/* REMOTE = plein écran */
 .remote-video {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  z-index: 1;
 }
 
-/* LOCAL VIDEO = petit cadre (PC) */
+/* LOCAL = petit cadre (PC) */
 .local-video {
   position: absolute;
   bottom: 20px;
@@ -51,9 +52,10 @@
   overflow: hidden;
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
   transition: 0.25s ease;
+  z-index: 2;
 }
 
-/* 📱 MOBILE : style Snapchat */
+/* 📱 MOBILE = Snapchat */
 @media (max-width: 768px) {
   .local-video {
     inset: 0;
@@ -67,12 +69,39 @@
   .remote-video {
     position: absolute;
     width: 160px;
-    height: 220px;
+    height: 240px;
     top: 20px;
     right: 20px;
     border-radius: 14px;
     overflow: hidden;
+    z-index: 3;
   }
+}
+
+/* ============================
+   🔥 LIVEKIT — CENTRAGE PARFAIT
+============================ */
+
+/* Le wrapper LiveKit remplit son conteneur */
+.lk-participant-tile,
+.lk-video-container {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  overflow: hidden !important;
+  background: black !important;
+}
+
+/* La vidéo est centrée et non déformée */
+.lk-video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
 }
 
 /* ============================
@@ -85,11 +114,11 @@
   display: flex;
   justify-content: center;
   gap: 40px;
-  z-index: 20;
+  z-index: 10;
 }
 
 /* ============================
-   🔘 BOUTONS
+   🔘 BOUTONS PREMIUM
 ============================ */
 .call-btn {
   width: 72px;
@@ -107,14 +136,9 @@
   overflow: hidden;
 }
 
-/* Hover */
 .call-btn:hover {
   transform: scale(1.12);
 }
-
-/* ============================
-   🎤 MICRO / 🎥 CAMÉRA
-============================ */
 
 /* ON */
 .btn-on {
@@ -159,16 +183,6 @@
 /* ============================
    🎬 ANIMATIONS
 ============================ */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
 @keyframes shake {
   0% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
@@ -180,30 +194,4 @@
 @keyframes slash {
   0% { transform: rotate(-45deg) translateY(20px); opacity: 0; }
   100% { transform: rotate(-45deg) translateY(0); opacity: 1; }
-}
-
-/* ============================
-   🔥 CONTENU LIVEKIT
-============================ */
-
-/* Le tile remplit son conteneur (remote/local) */
-.lk-participant-tile,
-.lk-video-container {
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  background: black !important;
-  overflow: hidden !important;
-}
-
-/* La vidéo est centrée et non déformée */
-.lk-video {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  object-position: center !important;
 }
