@@ -32,6 +32,10 @@ export default function Chat({ user, self, socket }: ChatProps) {
 
     // Réception temps réel
     const handler = (msg: any) => {
+      // ❗ On ignore les messages que j'ai moi-même envoyés
+      if (msg.from === self) return;
+
+      // On ajoute seulement si ça concerne la conversation
       if (msg.from === user || msg.to === user) {
         setMessages((prev) => [...prev, msg]);
       }
@@ -42,22 +46,26 @@ export default function Chat({ user, self, socket }: ChatProps) {
     return () => {
       socket.off("new-message", handler);
     };
-  }, [socket, user]);
+  }, [socket, user, self]);
 
-const sendMessage = () => {
-  if (!input.trim()) return;
+  const sendMessage = () => {
+    if (!input.trim()) return;
 
-  const msg = {
-    from: self,
-    to: user,
-    text: input,
-    time: Date.now(),
+    const msg = {
+      from: self,
+      to: user,
+      text: input,
+      time: Date.now(),
+    };
+
+    // Envoi au serveur
+    socket.emit("send-message", msg);
+
+    // ❗ Ajout instantané côté expéditeur
+    setMessages((prev) => [...prev, msg]);
+
+    setInput("");
   };
-
-  socket.emit("send-message", msg);
-  setInput("");
-};
-
 
   return (
     <div className="w-full h-full flex flex-col bg-[#0a0a0a]">
