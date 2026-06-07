@@ -1,6 +1,6 @@
 import http from "http";
 import { Server } from "socket.io";
-import Message from "./models/Message.ts"; // ← adapte le chemin
+import Message from "./models/Message.js"; // ← adapte le chemin
 
 const PORT = process.env.PORT || 3001;
 
