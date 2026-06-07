@@ -88,7 +88,6 @@ function VideoLayout() {
 
   return (
     <div className="call-video-container">
-
       {/* REMOTE VIDEO */}
       <div className="remote-video">
         {remote ? (
@@ -109,6 +108,7 @@ function VideoLayout() {
     </div>
   );
 }
+
 
 export default function Call({ selfId, peerId, onClose }: CallProps) {
   const [token, setToken] = useState<string | null>(null);

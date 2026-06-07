@@ -1,37 +1,59 @@
 /* ============================
-   🎥 VIDÉO — VERSION PRO
+   🎨 THEME GLOBAL
 ============================ */
+:root[data-lk-theme="default"] {
+  --lk-bg: #000;
+  --lk-text-color: white;
+  --lk-border-radius: 16px;
+  --lk-transition: 0.25s ease;
+}
 
-/* Conteneur global */
+/* ============================
+   🖥️ ÉCRAN D’APPEL
+============================ */
+.call-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* ============================
+   🎥 VIDÉO
+============================ */
 .call-video-container {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
   background: black;
+  overflow: hidden;
 }
 
-/* Remote vidéo = plein écran */
+/* REMOTE VIDEO = plein écran */
 .remote-video {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
-/* Local vidéo = petit carré (PC) */
+/* LOCAL VIDEO = petit cadre (PC) */
 .local-video {
   position: absolute;
   bottom: 20px;
   right: 20px;
   width: 180px;
-  height: 260px;
+  height: 120px;
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
-  z-index: 20;
+  transition: 0.25s ease;
 }
 
-/* 📱 Mobile = Snapchat */
+/* 📱 MOBILE : style Snapchat */
 @media (max-width: 768px) {
   .local-video {
     inset: 0;
@@ -45,34 +67,140 @@
   .remote-video {
     position: absolute;
     width: 160px;
-    height: 240px;
+    height: 220px;
     top: 20px;
     right: 20px;
     border-radius: 14px;
     overflow: hidden;
-    z-index: 30;
   }
 }
 
 /* ============================
-   🔥 CENTRAGE PARFAIT FACETIME
+   🎛️ BARRE DE CONTRÔLES
+============================ */
+.call-controls {
+  position: absolute;
+  bottom: 40px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  z-index: 20;
+}
+
+/* ============================
+   🔘 BOUTONS
+============================ */
+.call-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: var(--lk-transition);
+  cursor: pointer;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover */
+.call-btn:hover {
+  transform: scale(1.12);
+}
+
+/* ============================
+   🎤 MICRO / 🎥 CAMÉRA
 ============================ */
 
-/* Neutralise les wrappers LiveKit */
+/* ON */
+.btn-on {
+  background: rgba(0, 255, 120, 0.25);
+  border-color: rgba(0, 255, 120, 0.6);
+  box-shadow: 0 0 15px rgba(0,255,120,0.4);
+}
+
+/* OFF */
+.btn-off {
+  background: rgba(255, 0, 0, 0.25);
+  border-color: rgba(255, 0, 0, 0.6);
+  animation: shake 0.25s ease;
+}
+
+/* Icône barrée animée */
+.call-btn.btn-off::after {
+  content: "";
+  position: absolute;
+  width: 70%;
+  height: 3px;
+  background: red;
+  transform: rotate(-45deg) translateY(0);
+  border-radius: 2px;
+  animation: slash 0.25s ease forwards;
+}
+
+/* ============================
+   📞 BOUTON ROUGE (Raccrocher)
+============================ */
+.hang {
+  background: rgba(255, 0, 0, 0.85) !important;
+  border-color: rgba(255, 0, 0, 1) !important;
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.6);
+}
+
+.hang:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 35px rgba(255, 0, 0, 0.8);
+}
+
+/* ============================
+   🎬 ANIMATIONS
+============================ */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes slash {
+  0% { transform: rotate(-45deg) translateY(20px); opacity: 0; }
+  100% { transform: rotate(-45deg) translateY(0); opacity: 1; }
+}
+
+/* ============================
+   🔥 CONTENU LIVEKIT
+============================ */
+
+/* Le tile remplit son conteneur (remote/local) */
 .lk-participant-tile,
 .lk-video-container {
-  position: absolute !important;
-  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  overflow: hidden !important;
   background: black !important;
+  overflow: hidden !important;
 }
 
-/* Vidéo parfaitement centrée */
+/* La vidéo est centrée et non déformée */
 .lk-video {
   width: 100% !important;
   height: 100% !important;
