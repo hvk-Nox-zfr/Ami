@@ -194,3 +194,23 @@
   0% { transform: rotate(-45deg) translateY(20px); opacity: 0; }
   100% { transform: rotate(-45deg) translateY(0); opacity: 1; }
 }
+
+/* 🔥 Corrige LiveKit pour centrer parfaitement les vidéos */
+.lk-participant-tile,
+.lk-video-container,
+.lk-video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: black !important;
+}
+
+/* Supprime les marges internes LiveKit */
+.lk-participant-tile {
+  display: block !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+}
