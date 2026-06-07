@@ -2,7 +2,7 @@
 
 import "@/styles/livekit.css";
 import { useEffect, useState } from "react";
-import { LiveKitRoom, useRoomContext } from "@livekit/components-react";
+import { LiveKitRoom, useRoomContext, VideoConference } from "@livekit/components-react";
 
 type CallProps = {
   selfId: string;
@@ -85,6 +85,9 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
         onDisconnected={onClose}
         className="w-full h-full"
       >
+        {/* INTERFACE VIDÉO LIVEKIT */}
+        <VideoConference />
+
         {/* TEXTE */}
         <div className="absolute top-10 w-full text-center text-white text-xl opacity-80">
           Appel en cours…
