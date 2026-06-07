@@ -81,7 +81,8 @@ function CamButton() {
 
 // --- LAYOUT VIDÉO ---
 function VideoLayout() {
-  const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: true }]);
+  // ❗ IMPORTANT : plus de placeholder fantôme
+  const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: false }]);
 
   const remote = tracks.find(t => !t.participant.isLocal);
   const local = tracks.find(t => t.participant.isLocal);
@@ -89,18 +90,12 @@ function VideoLayout() {
   return (
     <div className="call-video-container">
 
-      {/* REMOTE VIDEO */}
+      {/* REMOTE = plein écran */}
       <div className="remote-video">
-        {remote ? (
-          <ParticipantTile trackRef={remote} />
-        ) : (
-          <div className="flex items-center justify-center h-full text-white opacity-50">
-            En attente de l’autre participant…
-          </div>
-        )}
+        {remote && <ParticipantTile trackRef={remote} />}
       </div>
 
-      {/* LOCAL VIDEO */}
+      {/* LOCAL = petit carré en bas à droite */}
       {local && (
         <div className="local-video">
           <ParticipantTile trackRef={local} />
