@@ -79,6 +79,7 @@ function CamButton() {
   );
 }
 
+// --- LAYOUT VIDÉO ---
 function VideoLayout() {
   const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: true }]);
 
@@ -101,18 +102,13 @@ function VideoLayout() {
 
       {/* LOCAL VIDEO */}
       {local && (
-        <div className="
-          absolute bottom-4 right-4 w-40 h-56 rounded-lg overflow-hidden shadow-lg
-          md:w-48 md:h-72
-          max-md:inset-0 max-md:w-full max-md:h-full max-md:rounded-none max-md:shadow-none max-md:opacity-80
-        ">
+        <div className="local-video">
           <ParticipantTile trackRef={local} />
         </div>
       )}
     </div>
   );
 }
-
 
 export default function Call({ selfId, peerId, onClose }: CallProps) {
   const [token, setToken] = useState<string | null>(null);
@@ -150,12 +146,10 @@ export default function Call({ selfId, peerId, onClose }: CallProps) {
       >
         <VideoLayout />
 
-        {/* TEXTE */}
         <div className="absolute top-10 w-full text-center text-white text-xl opacity-80">
           Appel en cours…
         </div>
 
-        {/* BARRE D’ACTIONS */}
         <div className="call-controls">
           <MicButton />
           <button onClick={onClose} className="call-btn hang">
