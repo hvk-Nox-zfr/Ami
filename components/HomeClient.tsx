@@ -177,6 +177,20 @@ export default function HomeClient() {
         </button>
       </aside>
 
+      <button
+        onClick={() => {
+          if ("Notification" in window) {
+            Notification.requestPermission().then((res) => {
+              console.log("Permission:", res);
+            });
+          }
+        }}
+        className="p-2 bg-yellow-500 text-black rounded-lg mb-4"
+      >
+        Activer les notifications
+      </button>
+
+
       {/* WRAPPER */}
       <div className="flex flex-1 relative">
         {/* LISTE D’AMIS */}
