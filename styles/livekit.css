@@ -190,15 +190,15 @@
 
 .call-island {
   position: fixed;
-  top: -120px; /* caché au début */
+  top: -80px; /* caché au début */
   left: 50%;
-  transform: translateX(-50%) scale(0.95);
-  width: 85%;
-  max-width: 420px;
+  transform: translateX(-50%) scale(0.92);
+  width: 78%;
+  max-width: 360px;
   background: rgba(20,20,20,0.85);
   backdrop-filter: blur(14px);
-  border-radius: 26px;
-  padding: 18px 22px;
+  border-radius: 22px;
+  padding: 12px 18px; /* plus fin */
   box-shadow: 0 8px 25px rgba(0,0,0,0.35);
   color: white;
   opacity: 0;
@@ -208,9 +208,9 @@
 
 /* Animation d’apparition */
 .call-island.show {
-  top: 20px;
+  top: 18px;
   opacity: 1;
-  transform: translateX(-50%) scale(1.03);
+  transform: translateX(-50%) scale(1);
 }
 
 /* Contenu */
@@ -218,11 +218,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 10px; /* plus fin */
 }
 
 .caller-name {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   text-align: center;
 }
@@ -230,14 +230,14 @@
 /* Boutons */
 .island-buttons {
   display: flex;
-  gap: 18px;
+  gap: 12px;
 }
 
 .island-buttons button {
-  padding: 10px 22px;
-  border-radius: 14px;
+  padding: 8px 18px;
+  border-radius: 12px;
   border: none;
-  font-size: 1rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: 0.25s;
 }

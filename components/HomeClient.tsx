@@ -263,17 +263,17 @@ export default function HomeClient() {
 
       {/* POPUP APPEL ENTRANT */}
       {incomingCall && (
-          <div className="call-island show">
-            <div className="island-content">
-              <p className="caller-name">{incomingCall} t’appelle…</p>
+        <div className="call-island show">
+          <div className="island-content">
+            <p className="caller-name">{incomingCall} t’appelle…</p>
 
-              <div className="island-buttons">
-                <button className="decline" onClick={rejectCall}>Refuser</button>
-                <button className="accept" onClick={acceptCall}>Accepter</button>
-              </div>
+            <div className="island-buttons">
+              <button className="decline" onClick={rejectCall}>Refuser</button>
+              <button className="accept" onClick={acceptCall}>Accepter</button>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </main>
   );
 }
