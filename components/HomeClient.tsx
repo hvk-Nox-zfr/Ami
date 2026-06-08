@@ -24,8 +24,12 @@ export default function HomeClient() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  // Détection mobile
+  // Mobile
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [mobileView, setMobileView] = useState<"friends" | "chat">("friends");
+
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -36,13 +40,6 @@ export default function HomeClient() {
     }
   }, []);
 
-  // Vue mobile
-  const [mobileView, setMobileView] = useState<"friends" | "chat">("friends");
-
-  // Swipe
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
-
   const onTouchStart = (e: any) => {
     if (!isMobileDevice) return;
     touchStartX.current = e.changedTouches[0].clientX;
@@ -51,39 +48,22 @@ export default function HomeClient() {
   const onTouchEnd = (e: any) => {
     if (!isMobileDevice) return;
     touchEndX.current = e.changedTouches[0].clientX;
-    handleSwipe();
-  };
-
-  const handleSwipe = () => {
-    if (!isMobileDevice) return;
-
     const delta = touchEndX.current - touchStartX.current;
 
-    if (delta > 80 && mobileView === "chat") {
-      setMobileView("friends");
-    }
-
-    if (delta < -80 && mobileView === "friends" && selectedUser) {
-      setMobileView("chat");
-    }
+    if (delta > 80 && mobileView === "chat") setMobileView("friends");
+    if (delta < -80 && mobileView === "friends" && selectedUser) setMobileView("chat");
   };
 
-  // Load friends
+  // Charger amis
   const loadFriends = useCallback(async () => {
     const res = await fetch("/api/friends/list");
     const data = await res.json();
     setAmis(data.friends || []);
   }, []);
 
+  // Socket
   useEffect(() => {
     if (!username) return;
-
-    // Demande de permission de notification une fois
-    if (typeof window !== "undefined" && "Notification" in window) {
-      if (Notification.permission === "default") {
-        Notification.requestPermission();
-      }
-    }
 
     const s = io("wss://ami-msec.onrender.com", {
       transports: ["websocket"],
@@ -99,39 +79,30 @@ export default function HomeClient() {
 
     loadFriends();
 
-    // Statut en ligne
     s.on("update-status", ({ username: u, online }) => {
-      setAmis((prev) =>
-        prev.map((f) => (f.username === u ? { ...f, online } : f))
-      );
+      setAmis((prev) => prev.map((f) => (f.username === u ? { ...f, online } : f)));
     });
 
-    // Appel entrant
     s.on("incoming-call", ({ from }) => setIncomingCall(from));
 
-    // Appel accepté
     s.on("call-accepted", ({ from }) => {
       setIncomingCall(null);
       setCallUser({ id: from, role: "caller" });
     });
 
-    // Appel refusé
     s.on("call-declined", ({ from }) => {
       alert(`${from} a refusé l’appel`);
       setCallUser(null);
     });
 
-    // 🔔 Notification quand on reçoit un message
+    // Notification locale (PC + iPhone PWA ouverte)
     s.on("new-message", (msg: any) => {
-      // Si le message est pour moi et que ce n'est pas moi qui l'ai envoyé
       if (msg.to === username && msg.from !== username) {
-        if (typeof document !== "undefined" && document.hidden) {
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(msg.from, {
-              body: msg.text,
-              icon: "/default-avatar.png",
-            });
-          }
+        if (document.hidden && Notification.permission === "granted") {
+          new Notification(msg.from, {
+            body: msg.text,
+            icon: "/default-avatar.png",
+          });
         }
       }
     });
@@ -200,28 +171,19 @@ export default function HomeClient() {
 
           <div className="space-y-3">
             {amis
-              .filter((f) =>
-                f.username.toLowerCase().includes(search.toLowerCase())
-              )
+              .filter((f) => f.username.toLowerCase().includes(search.toLowerCase()))
               .map((friend) => (
                 <div
                   key={friend._id}
                   className="friend-card cursor-pointer"
                   onClick={async () => {
-                  // 🔔 iPhone : demander la permission au moment du clic
-                  if ("Notification" in window && Notification.permission === "default") {
-                    try {
+                    // iPhone : permission uniquement sur geste utilisateur
+                    if (Notification.permission === "default") {
                       await Notification.requestPermission();
-                      } catch (e) {
-                      console.log("Permission refusée ou erreur :", e);
-                      }
                     }
 
-                    setSelectedUser(null);
-                    setTimeout(() => {
-                      setSelectedUser(friend.username);
-                        setMobileView("chat");
-                      }, 0);
+                    setSelectedUser(friend.username);
+                    setMobileView("chat");
                   }}
                 >
                   <div className="flex items-center gap-3">
@@ -238,9 +200,7 @@ export default function HomeClient() {
                     </div>
 
                     <div>
-                      <p className="font-semibold text-lg md:text-base">
-                        {friend.username}
-                      </p>
+                      <p className="font-semibold text-lg md:text-base">{friend.username}</p>
                       <p className="text-sm text-gray-400">
                         {friend.online ? "En ligne" : "Hors ligne"}
                       </p>
@@ -278,14 +238,11 @@ export default function HomeClient() {
         <section
           className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300 z-50"
           style={{
-            transform:
-              mobileView === "friends" ? "translateX(100%)" : "translateX(0)",
+            transform: mobileView === "friends" ? "translateX(100%)" : "translateX(0)",
             pointerEvents: mobileView === "friends" ? "none" : "auto",
           }}
         >
-          {selectedUser && (
-            <Chat user={selectedUser} self={username} socket={socket} />
-          )}
+          {selectedUser && <Chat user={selectedUser} self={username} socket={socket} />}
         </section>
       </div>
 
@@ -301,11 +258,7 @@ export default function HomeClient() {
 
       {/* POPUP APPEL ENTRANT */}
       {incomingCall && (
-        <IncomingCallPopup
-          caller={incomingCall}
-          onAccept={acceptCall}
-          onDecline={rejectCall}
-        />
+        <IncomingCallPopup caller={incomingCall} onAccept={acceptCall} onDecline={rejectCall} />
       )}
     </main>
   );
