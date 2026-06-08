@@ -4,6 +4,10 @@ import { Server } from "socket.io";
 import mongoose from "mongoose";
 import Message from "./models/Message.js";
 
+// 🔔 IMPORTS MANQUANTS
+import webpush from "web-push";
+import fetch from "node-fetch";
+
 const PORT = process.env.PORT || 3001;
 
 // ----------------------
@@ -14,6 +18,15 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(() => console.log("📦 MongoDB connecté"))
 .catch(err => console.error("❌ Erreur MongoDB :", err));
+
+// ----------------------
+// 🔔 CONFIG WEB-PUSH
+// ----------------------
+webpush.setVapidDetails(
+  "mailto:tonmail@example.com",
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 // ----------------------
 // 🚀 EXPRESS POUR RENDER
@@ -42,6 +55,42 @@ const io = new Server(server, {
 // Map username -> socket.id
 const users = {};
 
+// ----------------------
+// 🔔 ENVOI PUSH
+// ----------------------
+async function sendPush(username, msg) {
+  try {
+    const res = await fetch("https://ami-zeta.vercel.app/api/push/get", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+
+    const data = await res.json();
+    const subscription = data.subscription;
+
+    if (!subscription) {
+      console.log("❌ Aucun abonnement push pour", username);
+      return;
+    }
+
+    await webpush.sendNotification(
+      subscription,
+      JSON.stringify({
+        title: msg.from,
+        body: msg.text,
+      })
+    );
+
+    console.log("📨 Push envoyée à", username);
+  } catch (err) {
+    console.error("❌ Erreur envoi push :", err);
+  }
+}
+
+// ----------------------
+// 🔥 SOCKET.IO EVENTS
+// ----------------------
 io.on("connection", (socket) => {
   console.log("🔌 WebSocket connecté :", socket.id);
 
@@ -107,6 +156,9 @@ io.on("connection", (socket) => {
     if (users[to]) {
       io.to(users[to]).emit("new-message", msg);
     }
+
+    // 🔔 ENVOI PUSH
+    await sendPush(to, msg);
   });
 
   socket.on("disconnect", () => {
