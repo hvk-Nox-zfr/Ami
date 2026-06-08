@@ -1,35 +1,44 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
 import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
+import { authOptions } from "../../auth/[...nextauth]/route";
+import connect from "@/lib/mongodb";
+import Message from "@/models/Message";
+import User from "@/models/User"; // ⭐ IMPORTANT
 
 export async function POST(req: Request) {
-  try {
-    const session = await getServerSession();
-    const self = session?.user?.username;
+  await connect();
 
-    if (!self) {
-      return NextResponse.json({ messages: [] });
-    }
+  const session = (await getServerSession(authOptions)) as Session;
 
-    const body = await req.json();
-    const otherUser = body.otherUser;
-
-    const client = await clientPromise;
-    const db = client.db("ami");
-
-    const messages = await db
-      .collection("messages")
-      .find({
-        $or: [
-          { from: self, to: otherUser },
-          { from: otherUser, to: self },
-        ],
-      })
-      .sort({ time: 1 })
-      .toArray();
-
-    return NextResponse.json({ messages });
-  } catch (err) {
+  if (!session?.user?.email) {
     return NextResponse.json({ messages: [] });
   }
+
+  const { otherUser } = await req.json();
+
+  if (!otherUser || typeof otherUser !== "string") {
+    return NextResponse.json({ messages: [] });
+  }
+
+  const selfEmail = session.user.email;
+
+  // ⭐ On récupère l'email de l'autre utilisateur
+  const other = await User.findOne({ username: otherUser });
+
+  if (!other) {
+    return NextResponse.json({ messages: [] });
+  }
+
+  const otherEmail = other.email;
+
+  // ⭐ On cherche les messages par EMAILS
+  const messages = await Message.find({
+    $or: [
+      { sender: selfEmail, receiver: otherEmail },
+      { sender: otherEmail, receiver: selfEmail },
+    ],
+  }).sort({ timestamp: 1 });
+
+  return NextResponse.json({ messages });
 }
