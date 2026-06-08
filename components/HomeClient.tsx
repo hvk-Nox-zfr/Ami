@@ -24,7 +24,7 @@ export default function HomeClient() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  // Détection mobile (utile pour le swipe, mais plus critique pour l’ouverture du chat)
+  // Détection mobile
   const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   useEffect(() => {
@@ -78,6 +78,13 @@ export default function HomeClient() {
   useEffect(() => {
     if (!username) return;
 
+    // Demande de permission de notification une fois
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    }
+
     const s = io("wss://ami-msec.onrender.com", {
       transports: ["websocket"],
       secure: true,
@@ -92,20 +99,41 @@ export default function HomeClient() {
 
     loadFriends();
 
+    // Statut en ligne
     s.on("update-status", ({ username: u, online }) => {
-      setAmis((prev) => prev.map((f) => (f.username === u ? { ...f, online } : f)));
+      setAmis((prev) =>
+        prev.map((f) => (f.username === u ? { ...f, online } : f))
+      );
     });
 
+    // Appel entrant
     s.on("incoming-call", ({ from }) => setIncomingCall(from));
 
+    // Appel accepté
     s.on("call-accepted", ({ from }) => {
       setIncomingCall(null);
       setCallUser({ id: from, role: "caller" });
     });
 
+    // Appel refusé
     s.on("call-declined", ({ from }) => {
       alert(`${from} a refusé l’appel`);
       setCallUser(null);
+    });
+
+    // 🔔 Notification quand on reçoit un message
+    s.on("new-message", (msg: any) => {
+      // Si le message est pour moi et que ce n'est pas moi qui l'ai envoyé
+      if (msg.to === username && msg.from !== username) {
+        if (typeof document !== "undefined" && document.hidden) {
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(msg.from, {
+              body: msg.text,
+              icon: "/default-avatar.png",
+            });
+          }
+        }
+      }
     });
 
     return () => {
@@ -151,7 +179,6 @@ export default function HomeClient() {
 
       {/* WRAPPER */}
       <div className="flex flex-1 relative">
-
         {/* LISTE D’AMIS */}
         <section className="w-full md:w-80 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto shrink-0 z-10">
           <div className="flex items-center justify-between mb-4">
@@ -173,19 +200,21 @@ export default function HomeClient() {
 
           <div className="space-y-3">
             {amis
-              .filter((f) => f.username.toLowerCase().includes(search.toLowerCase()))
+              .filter((f) =>
+                f.username.toLowerCase().includes(search.toLowerCase())
+              )
               .map((friend) => (
                 <div
                   key={friend._id}
                   className="friend-card cursor-pointer"
                   onClick={() => {
-                    setSelectedUser(null); // reset obligatoire
+                    setSelectedUser(null);
                     setTimeout(() => {
                       setSelectedUser(friend.username);
                       setMobileView("chat");
-                  }, 0);
-                }}
-              >
+                    }, 0);
+                  }}
+                >
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <img
@@ -200,7 +229,9 @@ export default function HomeClient() {
                     </div>
 
                     <div>
-                      <p className="font-semibold text-lg md:text-base">{friend.username}</p>
+                      <p className="font-semibold text-lg md:text-base">
+                        {friend.username}
+                      </p>
                       <p className="text-sm text-gray-400">
                         {friend.online ? "En ligne" : "Hors ligne"}
                       </p>
@@ -234,22 +265,19 @@ export default function HomeClient() {
           )}
         </section>
 
-          {/* --- CHAT MOBILE --- */}
-          <section
-            className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300 z-50"
-            style={{
-              transform:
-                mobileView === "friends"
-                  ? "translateX(100%)"
-                  : "translateX(0)",
-              pointerEvents: mobileView === "friends" ? "none" : "auto",
-            }}
-          >
-            {selectedUser && (
-              <Chat user={selectedUser} self={username} socket={socket} />
-            )}
-          </section>
-
+        {/* CHAT MOBILE */}
+        <section
+          className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300 z-50"
+          style={{
+            transform:
+              mobileView === "friends" ? "translateX(100%)" : "translateX(0)",
+            pointerEvents: mobileView === "friends" ? "none" : "auto",
+          }}
+        >
+          {selectedUser && (
+            <Chat user={selectedUser} self={username} socket={socket} />
+          )}
+        </section>
       </div>
 
       {/* APPEL */}
