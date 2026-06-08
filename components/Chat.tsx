@@ -12,43 +12,38 @@ export default function Chat({ user, self, socket }: ChatProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
 
+  // Charger l'historique au changement de conversation
   useEffect(() => {
-    if (!socket) return;
-    if (!user || typeof user !== "string" || user.trim() === "") return;
+    if (!user || !socket) return;
 
     const safeUser = user.trim();
 
-    // Charger l'historique
     fetch("/api/messages/get", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ otherUser: safeUser }),
     })
       .then((res) => res.json())
       .then((data) => setMessages(data.messages || []))
       .catch(() => {});
+  }, [user, socket]);
 
-    // Réception temps réel
+  // Réception temps réel
+  useEffect(() => {
+    if (!socket) return;
+
     const handler = (msg: any) => {
-      // ❗ On ignore les messages que j'ai moi-même envoyés
       if (msg.from === self) return;
-
-      // On ajoute seulement si ça concerne la conversation
       if (msg.from === user || msg.to === user) {
         setMessages((prev) => [...prev, msg]);
       }
     };
 
     socket.on("new-message", handler);
-
-    return () => {
-      socket.off("new-message", handler);
-    };
+    return () => socket.off("new-message", handler);
   }, [socket, user, self]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
     const msg = {
@@ -58,11 +53,18 @@ export default function Chat({ user, self, socket }: ChatProps) {
       time: Date.now(),
     };
 
-    // Envoi au serveur
+    // 1️⃣ Envoi socket (temps réel)
     socket.emit("send-message", msg);
 
-    // ❗ Ajout instantané côté expéditeur
+    // 2️⃣ Ajout instantané côté expéditeur
     setMessages((prev) => [...prev, msg]);
+
+    // 3️⃣ Sauvegarde en base (PERSISTANCE)
+    await fetch("/api/messages/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(msg),
+    });
 
     setInput("");
   };
@@ -96,9 +98,7 @@ export default function Chat({ user, self, socket }: ChatProps) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") sendMessage();
-          }}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           placeholder="Écrire un message..."
           className="flex-1 p-3 bg-gray-800 rounded-xl"
         />

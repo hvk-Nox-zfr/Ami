@@ -1,33 +1,35 @@
 import { NextResponse } from "next/server";
+import clientPromise from "@/lib/mongodb";
 import { getServerSession } from "next-auth";
-import type { Session } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
-import connect from "@/lib/mongodb";
-import Message from "@/models/Message";
 
 export async function POST(req: Request) {
-  await connect();
+  try {
+    const session = await getServerSession();
+    const self = session?.user?.username;
 
-  const session = (await getServerSession(authOptions)) as Session;
+    if (!self) {
+      return NextResponse.json({ messages: [] });
+    }
 
-  if (!session?.user?.email) {
+    const body = await req.json();
+    const otherUser = body.otherUser;
+
+    const client = await clientPromise;
+    const db = client.db("ami");
+
+    const messages = await db
+      .collection("messages")
+      .find({
+        $or: [
+          { from: self, to: otherUser },
+          { from: otherUser, to: self },
+        ],
+      })
+      .sort({ time: 1 })
+      .toArray();
+
+    return NextResponse.json({ messages });
+  } catch (err) {
     return NextResponse.json({ messages: [] });
   }
-
-  const { otherUser } = await req.json();
-
-  if (!otherUser || typeof otherUser !== "string") {
-    return NextResponse.json({ messages: [] });
-  }
-
-  const userEmail = session.user.email;
-
-  const messages = await Message.find({
-    $or: [
-      { sender: userEmail, receiver: otherUser },
-      { sender: otherUser, receiver: userEmail },
-    ],
-  }).sort({ timestamp: 1 });
-
-  return NextResponse.json({ messages });
 }
