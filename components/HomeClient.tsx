@@ -177,20 +177,6 @@ export default function HomeClient() {
         </button>
       </aside>
 
-      <button
-        onClick={() => {
-          if ("Notification" in window) {
-            Notification.requestPermission().then((res) => {
-              console.log("Permission:", res);
-            });
-          }
-        }}
-        className="p-2 bg-yellow-500 text-black rounded-lg mb-4"
-      >
-        Activer les notifications
-      </button>
-
-
       {/* WRAPPER */}
       <div className="flex flex-1 relative">
         {/* LISTE D’AMIS */}
@@ -221,12 +207,21 @@ export default function HomeClient() {
                 <div
                   key={friend._id}
                   className="friend-card cursor-pointer"
-                  onClick={() => {
+                  onClick={async () => {
+                  // 🔔 iPhone : demander la permission au moment du clic
+                  if ("Notification" in window && Notification.permission === "default") {
+                    try {
+                      await Notification.requestPermission();
+                      } catch (e) {
+                      console.log("Permission refusée ou erreur :", e);
+                      }
+                    }
+
                     setSelectedUser(null);
                     setTimeout(() => {
                       setSelectedUser(friend.username);
-                      setMobileView("chat");
-                    }, 0);
+                        setMobileView("chat");
+                      }, 0);
                   }}
                 >
                   <div className="flex items-center gap-3">
