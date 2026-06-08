@@ -10,16 +10,11 @@ export async function POST(req: Request) {
   await connect();
 
   const session = (await getServerSession(authOptions)) as Session;
-
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   const { from, to, text, time } = await req.json();
-
-  if (!from || !to || !text) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-  }
 
   // Convertir username → email
   const receiver = await User.findOne({ username: to });
