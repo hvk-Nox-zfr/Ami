@@ -47,12 +47,17 @@ export default function HomeClient() {
 
   const onTouchEnd = (e: any) => {
     if (!isMobileDevice) return;
+
     touchEndX.current = e.changedTouches[0].clientX;
     const delta = touchEndX.current - touchStartX.current;
+
+    // Si le mouvement est trop petit → c’est un TAP, pas un swipe
+    if (Math.abs(delta) < 30) return;
 
     if (delta > 80 && mobileView === "chat") setMobileView("friends");
     if (delta < -80 && mobileView === "friends" && selectedUser) setMobileView("chat");
   };
+
 
   // Charger amis
   const loadFriends = useCallback(async () => {
