@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import {
   LiveKitRoom,
   useRoomContext,
-  ParticipantTile,
   useTracks,
+  VideoRenderer
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 
@@ -85,7 +85,7 @@ function CamButton() {
 
 function VideoLayout() {
   const tracks = useTracks([
-    { source: Track.Source.Camera, withPlaceholder: false },
+    { source: Track.Source.Camera, withPlaceholder: false }
   ]);
 
   const remote = tracks.find(t => !t.participant.isLocal);
@@ -95,20 +95,16 @@ function VideoLayout() {
     <div className="call-video-container">
 
       {/* REMOTE EN PLEIN ÉCRAN */}
-      <div className="remote-video">
-        {remote && (
-          <div className="video-wrapper">
-            <ParticipantTile trackRef={remote} />
-          </div>
-        )}
-      </div>
+      {remote && (
+        <div className="remote-video">
+          <VideoRenderer trackRef={remote} className="video-remote" />
+        </div>
+      )}
 
       {/* LOCAL EN PETIT */}
       {local && (
         <div className="local-video">
-          <div className="video-wrapper">
-            <ParticipantTile trackRef={local} />
-          </div>
+          <VideoRenderer trackRef={local} className="video-local" />
         </div>
       )}
     </div>
