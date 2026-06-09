@@ -240,7 +240,7 @@ export default function HomeClient() {
         <section
             className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300 z-50"
             style={{
-              transform: mobileView === "friends" ? "translateX(100%)" : "translateX(0)",
+              transform: mobileView === "friends" ? "translateX(100vw)" : "translateX(0)",
             }}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
