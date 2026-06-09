@@ -51,13 +51,13 @@ export default function HomeClient() {
     touchEndX.current = e.changedTouches[0].clientX;
     const delta = touchEndX.current - touchStartX.current;
 
-    // Si le mouvement est trop petit → c’est un TAP, pas un swipe
+    // TAP → on laisse passer le clic
     if (Math.abs(delta) < 30) return;
 
+    // SWIPE
     if (delta > 80 && mobileView === "chat") setMobileView("friends");
     if (delta < -80 && mobileView === "friends" && selectedUser) setMobileView("chat");
   };
-
 
   // Charger amis
   const loadFriends = useCallback(async () => {
@@ -100,7 +100,6 @@ export default function HomeClient() {
       setCallUser(null);
     });
 
-    // Notification locale (PC + iPhone PWA ouverte)
     s.on("new-message", (msg: any) => {
       if (msg.to === username && msg.from !== username) {
         if (document.hidden && Notification.permission === "granted") {
@@ -152,6 +151,7 @@ export default function HomeClient() {
 
       {/* WRAPPER */}
       <div className="flex flex-1 relative">
+
         {/* LISTE D’AMIS */}
         <section className="w-full md:w-80 bg-gray-900 border-r border-gray-800 p-4 overflow-y-auto shrink-0 z-10">
           <div className="flex items-center justify-between mb-4">
@@ -179,7 +179,6 @@ export default function HomeClient() {
                   key={friend._id}
                   className="friend-card cursor-pointer"
                   onClick={async () => {
-                    // iPhone : permission uniquement sur geste utilisateur
                     if (Notification.permission === "default") {
                       await Notification.requestPermission();
                     }
@@ -209,7 +208,8 @@ export default function HomeClient() {
                     </div>
                   </div>
 
-                  <button
+                  {/* Bouton d'appel — version robuste */}
+                  <div
                     onClick={(e) => {
                       e.stopPropagation();
                       startCall(friend.username);
@@ -219,7 +219,7 @@ export default function HomeClient() {
                     <svg width="22" height="22" fill="white">
                       <path d="M6 2l4 2-2 4c1 2 3 4 5 5l4-2 2 4c-1 1-3 2-5 2-6 0-12-6-12-12 0-2 1-4 2-5z" />
                     </svg>
-                  </button>
+                  </div>
                 </div>
               ))}
           </div>
@@ -238,14 +238,13 @@ export default function HomeClient() {
 
         {/* CHAT MOBILE */}
         <section
-            className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300 z-50"
-            style={{
-              transform: mobileView === "friends" ? "translateX(100vw)" : "translateX(0)",
-            }}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-          >
-
+          className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300 z-50"
+          style={{
+            transform: mobileView === "friends" ? "translateX(100vw)" : "translateX(0)",
+          }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
           {selectedUser && <Chat user={selectedUser} self={username} socket={socket} />}
         </section>
       </div>
