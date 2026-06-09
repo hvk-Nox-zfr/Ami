@@ -17,7 +17,7 @@ type CallProps = {
   onClose: () => void;
 };
 
-// --- ICONES SVG ---
+// --- ICONES ---
 const MicOn = () => (
   <svg width="28" height="28" fill="white">
     <path d="M14 18a4 4 0 0 0 4-4V6a4 4 0 1 0-8 0v8a4 4 0 0 0 4 4zm6-4a6 6 0 0 1-12 0H6a8 8 0 0 0 16 0h-2zM12 22h4v2h-4v-2z"/>
@@ -81,8 +81,9 @@ function CamButton() {
 
 // --- LAYOUT VIDÉO ---
 function VideoLayout() {
-  // ❗ IMPORTANT : pas de placeholders → plus de 3 participants fantômes
-  const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: false }]);
+  const tracks = useTracks([
+    { source: Track.Source.Camera, withPlaceholder: false },
+  ]);
 
   const remote = tracks.find(t => !t.participant.isLocal);
   const local = tracks.find(t => t.participant.isLocal);
@@ -90,12 +91,12 @@ function VideoLayout() {
   return (
     <div className="call-video-container">
 
-      {/* REMOTE = plein écran */}
+      {/* REMOTE EN PLEIN ÉCRAN */}
       <div className="remote-video">
         {remote && <ParticipantTile trackRef={remote} />}
       </div>
 
-      {/* LOCAL = petite bulle en bas à droite */}
+      {/* LOCAL EN PETIT EN BAS À DROITE */}
       {local && (
         <div className="local-video">
           <ParticipantTile trackRef={local} />
