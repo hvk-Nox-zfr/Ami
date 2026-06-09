@@ -1,12 +1,11 @@
 "use client";
 
 import "@/styles/livekit.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   LiveKitRoom,
   useRoomContext,
   useTracks,
-  VideoRenderer
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 
@@ -91,22 +90,55 @@ function VideoLayout() {
   const remote = tracks.find(t => !t.participant.isLocal);
   const local = tracks.find(t => t.participant.isLocal);
 
+  const remoteRef = useRef<HTMLVideoElement>(null);
+  const localRef = useRef<HTMLVideoElement>(null);
+
+  // Attacher les vidéos
+  useEffect(() => {
+    if (remote && remote.publication?.track && remoteRef.current) {
+      remote.publication.track.attach(remoteRef.current);
+    }
+    return () => {
+      if (remote && remote.publication?.track && remoteRef.current) {
+        remote.publication.track.detach(remoteRef.current);
+      }
+    };
+  }, [remote]);
+
+  useEffect(() => {
+    if (local && local.publication?.track && localRef.current) {
+      local.publication.track.attach(localRef.current);
+    }
+    return () => {
+      if (local && local.publication?.track && localRef.current) {
+        local.publication.track.detach(localRef.current);
+      }
+    };
+  }, [local]);
+
   return (
     <div className="call-video-container">
 
       {/* REMOTE EN PLEIN ÉCRAN */}
-      {remote && (
-        <div className="remote-video">
-          <VideoRenderer trackRef={remote} className="video-remote" />
-        </div>
-      )}
+      <div className="remote-video">
+        <video
+          ref={remoteRef}
+          autoPlay
+          playsInline
+          className="video-remote"
+        />
+      </div>
 
       {/* LOCAL EN PETIT */}
-      {local && (
-        <div className="local-video">
-          <VideoRenderer trackRef={local} className="video-local" />
-        </div>
-      )}
+      <div className="local-video">
+        <video
+          ref={localRef}
+          autoPlay
+          muted
+          playsInline
+          className="video-local"
+        />
+      </div>
     </div>
   );
 }
