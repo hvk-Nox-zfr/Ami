@@ -6,7 +6,6 @@ import Message from "./models/Message.js";
 
 // 🔔 IMPORTS MANQUANTS
 import webpush from "web-push";
-import fetch from "node-fetch";
 
 const PORT = process.env.PORT || 3001;
 
