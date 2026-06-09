@@ -1,4 +1,5 @@
 import "./globals.css";
+import { SessionProvider } from "next-auth/react";
 
 export const metadata = {
   title: "Ami",
@@ -13,7 +14,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#000000" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body>{children}</body>
+      <body>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
+      </body>
     </html>
   );
 }
