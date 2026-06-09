@@ -17,7 +17,8 @@ type CallProps = {
   onClose: () => void;
 };
 
-// --- ICONES ---
+/* ---------------- ICONES ---------------- */
+
 const MicOn = () => (
   <svg width="28" height="28" fill="white">
     <path d="M14 18a4 4 0 0 0 4-4V6a4 4 0 1 0-8 0v8a4 4 0 0 0 4 4zm6-4a6 6 0 0 1-12 0H6a8 8 0 0 0 16 0h-2zM12 22h4v2h-4v-2z"/>
@@ -48,7 +49,8 @@ const Hang = () => (
   </svg>
 );
 
-// --- BOUTONS ---
+/* ---------------- BOUTONS ---------------- */
+
 function MicButton() {
   const room = useRoomContext();
   const local = room?.localParticipant;
@@ -79,7 +81,8 @@ function CamButton() {
   );
 }
 
-// --- LAYOUT VIDÉO ---
+/* ---------------- LAYOUT VIDÉO ---------------- */
+
 function VideoLayout() {
   const tracks = useTracks([
     { source: Track.Source.Camera, withPlaceholder: false },
@@ -93,18 +96,26 @@ function VideoLayout() {
 
       {/* REMOTE EN PLEIN ÉCRAN */}
       <div className="remote-video">
-        {remote && <ParticipantTile trackRef={remote} />}
+        {remote && (
+          <div className="video-wrapper">
+            <ParticipantTile trackRef={remote} />
+          </div>
+        )}
       </div>
 
-      {/* LOCAL EN PETIT EN BAS À DROITE */}
+      {/* LOCAL EN PETIT */}
       {local && (
         <div className="local-video">
-          <ParticipantTile trackRef={local} />
+          <div className="video-wrapper">
+            <ParticipantTile trackRef={local} />
+          </div>
         </div>
       )}
     </div>
   );
 }
+
+/* ---------------- COMPOSANT PRINCIPAL ---------------- */
 
 export default function Call({ selfId, peerId, onClose }: CallProps) {
   const [token, setToken] = useState<string | null>(null);
