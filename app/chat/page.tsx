@@ -1,9 +1,5 @@
-"use client";
-
-export const dynamic = "force-dynamic";
-
-import HomeClient from "@/components/HomeClient";
+import ChatClient from "./ChatClient";
 
 export default function Page() {
-  return <HomeClient />;
+  return <ChatClient />;
 }
