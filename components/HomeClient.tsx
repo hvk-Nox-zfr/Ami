@@ -139,11 +139,8 @@ export default function HomeClient() {
   };
 
   return (
-    <main
-      className="h-screen w-full bg-black text-white flex overflow-hidden"
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
+    <main className="h-screen w-full bg-black text-white flex overflow-hidden">
+
       {/* SIDEBAR PC */}
       <aside className="hidden md:flex flex-col w-20 bg-[#0a0a0a] border-r border-gray-800 p-4 gap-8 items-center">
         <button className="nav-btn">
@@ -241,12 +238,14 @@ export default function HomeClient() {
 
         {/* CHAT MOBILE */}
         <section
-          className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300 z-50"
-          style={{
-            transform: mobileView === "friends" ? "translateX(100%)" : "translateX(0)",
-            pointerEvents: "auto",
-          }}
-        >
+            className="absolute top-0 left-0 w-full h-full bg-gray-950 md:hidden transition-transform duration-300 z-50"
+            style={{
+              transform: mobileView === "friends" ? "translateX(100%)" : "translateX(0)",
+            }}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+          >
+
           {selectedUser && <Chat user={selectedUser} self={username} socket={socket} />}
         </section>
       </div>
