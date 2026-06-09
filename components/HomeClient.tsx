@@ -100,14 +100,24 @@ export default function HomeClient() {
       setCallUser(null);
     });
 
+    // Notification locale (PC + iPhone PWA ouverte) — version sécurisée
     s.on("new-message", (msg: any) => {
-      if (msg.to === username && msg.from !== username) {
-        if (document.hidden && Notification.permission === "granted") {
-          new Notification(msg.from, {
-            body: msg.text,
-            icon: "/default-avatar.png",
-          });
+      try {
+        if (!username) return;
+        if (msg.to === username && msg.from !== username) {
+          if (
+            typeof Notification !== "undefined" &&
+            document.hidden &&
+            Notification.permission === "granted"
+          ) {
+            new Notification(msg.from, {
+              body: msg.text,
+              icon: "/default-avatar.png",
+            });
+          }
         }
+      } catch {
+        // On ignore les erreurs de Notification sur les navigateurs qui ne supportent pas
       }
     });
 
@@ -135,6 +145,22 @@ export default function HomeClient() {
     if (!socket || !incomingCall || !username) return;
     socket.emit("call-declined", { from: username, to: incomingCall });
     setIncomingCall(null);
+  };
+
+  const handleSelectFriend = async (friendUsername: string) => {
+    // On sécurise Notification pour éviter les crashs sur iOS / PWA
+    try {
+      if (typeof Notification !== "undefined") {
+        if (Notification.permission === "default") {
+          await Notification.requestPermission();
+        }
+      }
+    } catch {
+      // On ignore si Notification n'est pas supporté
+    }
+
+    setSelectedUser(friendUsername);
+    setMobileView("chat");
   };
 
   return (
@@ -178,14 +204,7 @@ export default function HomeClient() {
                 <div
                   key={friend._id}
                   className="friend-card cursor-pointer"
-                  onClick={async () => {
-                    if (Notification.permission === "default") {
-                      await Notification.requestPermission();
-                    }
-
-                    setSelectedUser(friend.username);
-                    setMobileView("chat");
-                  }}
+                  onClick={() => handleSelectFriend(friend.username)}
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative">
@@ -208,7 +227,7 @@ export default function HomeClient() {
                     </div>
                   </div>
 
-                  {/* Bouton d'appel — version robuste */}
+                  {/* Bouton d'appel — en <div> pour éviter les bugs iOS */}
                   <div
                     onClick={(e) => {
                       e.stopPropagation();
