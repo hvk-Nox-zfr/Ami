@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body>
-        <SWRegister /> {/* Enregistrement du service worker */}
+        <SWRegister /> 
         {children}
       </body>
     </html>
