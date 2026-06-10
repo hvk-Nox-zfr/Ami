@@ -38,6 +38,9 @@
   position: absolute;
   inset: 0;
   z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   overflow: hidden;
 }
 
@@ -48,12 +51,15 @@
   right: 20px;
   width: 150px;
   height: 220px;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   z-index: 2;
   box-shadow: 0 0 25px rgba(0,0,0,0.6);
   transition: 0.25s ease;
   background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* 📱 MOBILE : style FaceTime */
@@ -68,29 +74,16 @@
 }
 
 /* ============================
-   🔥 LIVEKIT — CENTRAGE PARFAIT
+   🎥 CENTRAGE VIDÉO (IMPORTANT)
 ============================ */
-
-/* Le wrapper LiveKit remplit son conteneur */
-.lk-participant-tile,
-.lk-video-container {
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  overflow: hidden !important;
-  background: black !important;
-}
-
-/* La vidéo est centrée et non déformée */
-.lk-video {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  object-position: center !important;
+video,
+.video-remote,
+.video-local {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 /* ============================
@@ -102,57 +95,45 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: 28px;
   z-index: 10;
 }
 
 /* ============================
-   🔘 BOUTONS PREMIUM
+   🔘 BOUTONS PREMIUM (NOUVEAU STYLE)
 ============================ */
 .call-btn {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  backdrop-filter: blur(12px);
-  background: rgba(255,255,255,0.08);
+  width: 68px;
+  height: 68px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.25);
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: var(--lk-transition);
+  transition: 0.25s ease;
   cursor: pointer;
-  border: 2px solid transparent;
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.4);
 }
 
 .call-btn:hover {
-  transform: scale(1.12);
+  transform: scale(1.08);
+  background: rgba(255,255,255,0.18);
 }
 
-/* ON */
+/* Micro ON */
 .btn-on {
-  background: rgba(0, 255, 120, 0.25);
-  border-color: rgba(0, 255, 120, 0.6);
-  box-shadow: 0 0 15px rgba(0,255,120,0.4);
+  background: rgba(0, 255, 120, 0.22);
+  border-color: rgba(0, 255, 120, 0.5);
+  box-shadow: 0 0 18px rgba(0,255,120,0.4);
 }
 
-/* OFF */
+/* Micro OFF */
 .btn-off {
-  background: rgba(255, 0, 0, 0.25);
-  border-color: rgba(255, 0, 0, 0.6);
-  animation: shake 0.25s ease;
-}
-
-/* Icône barrée animée */
-.call-btn.btn-off::after {
-  content: "";
-  position: absolute;
-  width: 70%;
-  height: 3px;
-  background: red;
-  transform: rotate(-45deg) translateY(0);
-  border-radius: 2px;
-  animation: slash 0.25s ease forwards;
+  background: rgba(255, 0, 0, 0.22);
+  border-color: rgba(255, 0, 0, 0.5);
+  box-shadow: 0 0 18px rgba(255,0,0,0.4);
 }
 
 /* ============================
@@ -165,7 +146,7 @@
 }
 
 .hang:hover {
-  transform: scale(1.15);
+  transform: scale(1.12);
   box-shadow: 0 0 35px rgba(255, 0, 0, 0.8);
 }
 
