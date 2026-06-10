@@ -5,8 +5,8 @@ import "@/lib/mongodb";
 
 webpush.setVapidDetails(
   "mailto:contact@ami.com",
-  process.env.VAPID_PUBLIC!,
-  process.env.VAPID_PRIVATE!
+  process.env.VAPID_PUBLIC_KEY!,
+  process.env.VAPID_PRIVATE_KEY!
 );
 
 export async function POST(req: Request) {
