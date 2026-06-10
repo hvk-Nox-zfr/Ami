@@ -24,7 +24,7 @@ export default function PushClient({ username }: { username: string }) {
         applicationServerKey: urlBase64ToUint8Array(vapidKey)
       });
 
-      await fetch("/api/ppush/subscribe", {
+      await fetch("/api/push/subscribe", {
         method: "POST",
         body: JSON.stringify({ username, subscription: sub })
       });
