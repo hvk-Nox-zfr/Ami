@@ -7,7 +7,6 @@ import {
   useRoomContext,
   useTracks,
 } from "@livekit/components-react";
-import { Track } from "livekit-client";
 
 type CallProps = {
   selfId: string;
@@ -83,23 +82,23 @@ function CamButton() {
 /* ---------------- LAYOUT VIDÉO ---------------- */
 
 function VideoLayout() {
-  const tracks = useTracks([]);
+  const tracks = useTracks();
 
-  // Filtrage compatible avec toutes les versions
+  // Filtrage EXACT pour LiveKit 2.9.21
   const remote = tracks.find(
     (t) =>
       !t.participant.isLocal &&
-      t.publication?.track &&
-      t.publication.track.kind === "video" &&
-      !t.publication.isMuted
+      t.publication &&
+      t.publication.kind === "video" &&
+      t.publication.track
   );
 
   const local = tracks.find(
     (t) =>
       t.participant.isLocal &&
-      t.publication?.track &&
-      t.publication.track.kind === "video" &&
-      !t.publication.isMuted
+      t.publication &&
+      t.publication.kind === "video" &&
+      t.publication.track
   );
 
   const remoteRef = useRef<HTMLVideoElement>(null);

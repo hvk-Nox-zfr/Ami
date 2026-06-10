@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@livekit/components-core": "0.12.1",
-    "@livekit/components-react": "2.9.21",
+    "@livekit/components-react": "^2.9.21",
     "bcryptjs": "^3.0.3",
-    "livekit-client": "^2.19.1",
+    "livekit-client": "^2.19.2",
     "livekit-server-sdk": "^2.15.4",
     "mongodb": "^7.2.0",
     "mongoose": "^9.6.2",
