@@ -26,8 +26,9 @@ export default function PushClient({ username }: { username: string }) {
 
       await fetch("/api/push/subscribe", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, subscription: sub })
-      });
+        });
     }
 
     subscribe();
