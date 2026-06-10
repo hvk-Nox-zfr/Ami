@@ -83,34 +83,45 @@ function CamButton() {
 /* ---------------- LAYOUT VIDÉO ---------------- */
 
 function VideoLayout() {
-  const tracks = useTracks([
-    { source: Track.Source.Camera, withPlaceholder: false }
-  ]);
+  const tracks = useTracks([]);
 
-  const remote = tracks.find(t => !t.participant.isLocal);
-  const local = tracks.find(t => t.participant.isLocal);
+  // Filtrage compatible avec toutes les versions
+  const remote = tracks.find(
+    (t) =>
+      !t.participant.isLocal &&
+      t.publication?.track &&
+      t.publication.track.kind === "video" &&
+      !t.publication.isMuted
+  );
+
+  const local = tracks.find(
+    (t) =>
+      t.participant.isLocal &&
+      t.publication?.track &&
+      t.publication.track.kind === "video" &&
+      !t.publication.isMuted
+  );
 
   const remoteRef = useRef<HTMLVideoElement>(null);
   const localRef = useRef<HTMLVideoElement>(null);
 
-  // Attacher les vidéos
   useEffect(() => {
-    if (remote && remote.publication?.track && remoteRef.current) {
+    if (remote?.publication?.track && remoteRef.current) {
       remote.publication.track.attach(remoteRef.current);
     }
     return () => {
-      if (remote && remote.publication?.track && remoteRef.current) {
+      if (remote?.publication?.track && remoteRef.current) {
         remote.publication.track.detach(remoteRef.current);
       }
     };
   }, [remote]);
 
   useEffect(() => {
-    if (local && local.publication?.track && localRef.current) {
+    if (local?.publication?.track && localRef.current) {
       local.publication.track.attach(localRef.current);
     }
     return () => {
-      if (local && local.publication?.track && localRef.current) {
+      if (local?.publication?.track && localRef.current) {
         local.publication.track.detach(localRef.current);
       }
     };
@@ -121,23 +132,12 @@ function VideoLayout() {
 
       {/* REMOTE EN PLEIN ÉCRAN */}
       <div className="remote-video">
-        <video
-          ref={remoteRef}
-          autoPlay
-          playsInline
-          className="video-remote"
-        />
+        <video ref={remoteRef} autoPlay playsInline className="video-remote" />
       </div>
 
       {/* LOCAL EN PETIT */}
       <div className="local-video">
-        <video
-          ref={localRef}
-          autoPlay
-          muted
-          playsInline
-          className="video-local"
-        />
+        <video ref={localRef} autoPlay muted playsInline className="video-local" />
       </div>
     </div>
   );
