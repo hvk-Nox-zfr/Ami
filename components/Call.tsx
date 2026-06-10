@@ -104,17 +104,31 @@ function VideoLayout() {
   const remoteRef = useRef<HTMLVideoElement>(null);
   const localRef = useRef<HTMLVideoElement>(null);
 
+  const [remoteOrientation, setRemoteOrientation] = useState<
+    "vertical" | "horizontal"
+  >("horizontal");
+
+  /* ---- Attacher remote ---- */
   useEffect(() => {
     if (remote?.publication?.track && remoteRef.current) {
       remote.publication.track.attach(remoteRef.current);
+
+      const video = remoteRef.current;
+
+      const checkRatio = () => {
+        if (video.videoHeight > video.videoWidth) {
+          setRemoteOrientation("vertical");
+        } else {
+          setRemoteOrientation("horizontal");
+        }
+      };
+
+      video.addEventListener("loadedmetadata", checkRatio);
+      return () => video.removeEventListener("loadedmetadata", checkRatio);
     }
-    return () => {
-      if (remote?.publication?.track && remoteRef.current) {
-        remote.publication.track.detach(remoteRef.current);
-      }
-    };
   }, [remote]);
 
+  /* ---- Attacher local ---- */
   useEffect(() => {
     if (local?.publication?.track && localRef.current) {
       local.publication.track.attach(localRef.current);
@@ -129,14 +143,14 @@ function VideoLayout() {
   return (
     <div className="call-video-container">
 
-      {/* REMOTE EN PLEIN ÉCRAN */}
-      <div className="remote-video">
-        <video ref={remoteRef} autoPlay playsInline className="video-remote" />
+      {/* REMOTE AVEC ORIENTATION */}
+      <div className={`remote-video ${remoteOrientation}`}>
+        <video ref={remoteRef} autoPlay playsInline />
       </div>
 
       {/* LOCAL EN PETIT */}
       <div className="local-video">
-        <video ref={localRef} autoPlay muted playsInline className="video-local" />
+        <video ref={localRef} autoPlay muted playsInline />
       </div>
     </div>
   );

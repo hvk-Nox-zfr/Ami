@@ -4,7 +4,7 @@
 :root[data-lk-theme="default"] {
   --lk-bg: #000;
   --lk-text-color: white;
-  --lk-border-radius: 16px;
+  --lk-border-radius: 18px;
   --lk-transition: 0.25s ease;
 }
 
@@ -76,14 +76,28 @@
 /* ============================
    🎥 CENTRAGE VIDÉO (IMPORTANT)
 ============================ */
-video,
-.video-remote,
-.video-local {
+video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
+}
+
+/* Vidéo verticale (smartphone) */
+.remote-video.vertical video {
+  width: auto !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+/* Vidéo horizontale (PC) */
+.remote-video.horizontal video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
 }
 
 /* ============================
@@ -95,7 +109,7 @@ video,
   width: 100%;
   display: flex;
   justify-content: center;
-  gap: 28px;
+  gap: 26px;
   z-index: 10;
 }
 
@@ -103,10 +117,10 @@ video,
    🔘 BOUTONS PREMIUM (NOUVEAU STYLE)
 ============================ */
 .call-btn {
-  width: 68px;
-  height: 68px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.12);
+  width: 70px;
+  height: 70px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.10);
   backdrop-filter: blur(14px);
   border: 1px solid rgba(255,255,255,0.25);
   display: flex;
@@ -118,7 +132,7 @@ video,
 }
 
 .call-btn:hover {
-  transform: scale(1.08);
+  transform: scale(1.10);
   background: rgba(255,255,255,0.18);
 }
 
